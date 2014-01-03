@@ -27,10 +27,10 @@ function save_extrinsic_full_rips_complex( points, dimension, filename )
     %% file type identifier
     fwrite( fid, 3, 'int64' );
 
-    %% total number of number of input points n 
+    %% total number of input points n 
     fwrite( fid, size( points, 2 ), 'int64' );
 
-    %% ambient of each point dimension d 
+    %% ambient dimension of each point  d 
     fwrite( fid, size( points, 1 ), 'int64' );
 
     %% dimension of complex k
