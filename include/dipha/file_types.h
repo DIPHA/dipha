@@ -28,8 +28,8 @@ namespace dipha {
             WEIGHTED_EXPLICIT_COMPLEX = 0,
             WEIGHTED_CUBICAL_COMPLEX = 1,
             PERSISTENCE_DIAGRAM = 2,
-            EMBEDDED_COMPLETE_RIPS_COMPLEX = 3,
-            GENERAL_COMPLETE_RIPS_COMPLEX = 4
+            EXTRINSIC_FULL_RIPS_COMPLEX = 3,
+            INTRINSIC_FULL_RIPS_COMPLEX = 4
         };
 
         inline void assert_dipha_type( const std::string& filename )

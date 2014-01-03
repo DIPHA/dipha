@@ -52,10 +52,10 @@ namespace dipha {
                 mpi_utils::file_read_at_all_vector( file, 0, 2, preamble );
                 int64_t type = preamble[ 1 ];
 
-                if( type == dipha::file_types::EMBEDDED_COMPLETE_RIPS_COMPLEX ) {
+                if( type == dipha::file_types::EXTRINSIC_FULL_RIPS_COMPLEX ) {
                     _load_binary_from_point_coordinates( file );
                 }
-                if( type == dipha::file_types::GENERAL_COMPLETE_RIPS_COMPLEX ) {
+                if( type == dipha::file_types::INTRINSIC_FULL_RIPS_COMPLEX ) {
                     _load_binary_from_distance_matrix( file );
                 }
 
