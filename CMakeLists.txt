@@ -51,8 +51,7 @@ source_group(Header\ Files\\data_structures FILES ${dipha_data_structures_includ
 source_group(Header\ Files\\algorithms FILES ${dipha_algorithms_includes})
 
 enable_testing()
-get_target_property(regression_test_path regression_test LOCATION)
 add_test(NAME regression_test
-         COMMAND mpiexec -n 3 ${regression_test_path}
+         COMMAND mpiexec -n 3 $<TARGET_FILE:regression_test>
          WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
         )
