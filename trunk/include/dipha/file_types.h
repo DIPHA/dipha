@@ -54,14 +54,5 @@ namespace dipha {
 
             return (file_type)second_int64_t;
         }
-
-        inline void assert_file_type( const std::string& filename, file_type required_file_type )
-        {
-            assert_dipha_type( filename );
-            if( dipha::file_types::get_file_type( filename ) != required_file_type ) {
-                mpi_utils::error_printer_if_root() << filename << " is not a proper DIPHA file (first int64_t does not match magic number)" << std::endl;
-                MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
-            }
-        }
     }
 }
