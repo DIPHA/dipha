@@ -152,8 +152,8 @@ int main( int argc, char** argv )
         complex.load_binary( "extrinsic_full_rips.complex" );
         dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
         dipha::data_structures::write_once_column_array reduced_columns;
-        dipha::algorithms::compute_reduced_columns( complex, true, filtration_to_cell_map, reduced_columns );
-        dipha::outputs::save_persistence_diagram( "DIPHA_TEST_extrinsic_full_rips.diagram", complex, filtration_to_cell_map, reduced_columns, true );
+        dipha::algorithms::compute_reduced_columns( complex, false, filtration_to_cell_map, reduced_columns );
+        dipha::outputs::save_persistence_diagram( "DIPHA_TEST_extrinsic_full_rips.diagram", complex, filtration_to_cell_map, reduced_columns, false );
         MPI_Barrier( MPI_COMM_WORLD );
         bool result_has_not_changed = dipha::mpi_utils::are_files_equal( "DIPHA_TEST_extrinsic_full_rips.diagram", "extrinsic_full_rips.diagram" );
         MPI_Barrier( MPI_COMM_WORLD );
@@ -173,8 +173,8 @@ int main( int argc, char** argv )
         complex.load_binary( "extrinsic_full_rips.complex" );
         dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
         dipha::data_structures::write_once_column_array reduced_columns;
-        dipha::algorithms::compute_reduced_columns( complex, false, filtration_to_cell_map, reduced_columns );
-        dipha::outputs::save_persistence_diagram( "DIPHA_TEST_extrinsic_full_rips.diagram", complex, filtration_to_cell_map, reduced_columns, false );
+        dipha::algorithms::compute_reduced_columns( complex, true, filtration_to_cell_map, reduced_columns );
+        dipha::outputs::save_persistence_diagram( "DIPHA_TEST_extrinsic_full_rips.diagram", complex, filtration_to_cell_map, reduced_columns, true );
         MPI_Barrier( MPI_COMM_WORLD );
         bool result_has_not_changed = dipha::mpi_utils::are_files_equal( "DIPHA_TEST_extrinsic_full_rips.diagram", "extrinsic_full_rips.diagram" );
         MPI_Barrier( MPI_COMM_WORLD );
@@ -183,6 +183,48 @@ int main( int argc, char** argv )
             std::remove( "DIPHA_TEST_extrinsic_full_rips.diagram" );
             if( !result_has_not_changed ) {
                 dipha::mpi_utils::error_printer_if_root( ) << "Dual reduction of extrinsic_full_rips is buggy!" << std::endl;
+                MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
+            }
+        }
+    }
+
+    // test primal reduction of intrinsic full rips complex
+    {
+        dipha::inputs::full_rips_complex complex;
+        complex.load_binary( "intrinsic_full_rips.complex" );
+        dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
+        dipha::data_structures::write_once_column_array reduced_columns;
+        dipha::algorithms::compute_reduced_columns( complex, false, filtration_to_cell_map, reduced_columns );
+        dipha::outputs::save_persistence_diagram( "DIPHA_TEST_intrinsic_full_rips.diagram", complex, filtration_to_cell_map, reduced_columns, false );
+        MPI_Barrier( MPI_COMM_WORLD );
+        bool result_has_not_changed = dipha::mpi_utils::are_files_equal( "DIPHA_TEST_intrinsic_full_rips.diagram", "intrinsic_full_rips.diagram" );
+        MPI_Barrier( MPI_COMM_WORLD );
+
+        if( dipha::mpi_utils::is_root( ) ) {
+            std::remove( "DIPHA_TEST_intrinsic_full_rips.diagram" );
+            if( !result_has_not_changed ) {
+                dipha::mpi_utils::error_printer_if_root( ) << "Primal reduction of intrinsic_full_rips is buggy!" << std::endl;
+                MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
+            }
+        }
+    }
+
+    // test dual reduction of intrinsic full rips complex
+    {
+        dipha::inputs::full_rips_complex complex;
+        complex.load_binary( "intrinsic_full_rips.complex" );
+        dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
+        dipha::data_structures::write_once_column_array reduced_columns;
+        dipha::algorithms::compute_reduced_columns( complex, true, filtration_to_cell_map, reduced_columns );
+        dipha::outputs::save_persistence_diagram( "DIPHA_TEST_intrinsic_full_rips.diagram", complex, filtration_to_cell_map, reduced_columns, true );
+        MPI_Barrier( MPI_COMM_WORLD );
+        bool result_has_not_changed = dipha::mpi_utils::are_files_equal( "DIPHA_TEST_intrinsic_full_rips.diagram", "intrinsic_full_rips.diagram" );
+        MPI_Barrier( MPI_COMM_WORLD );
+
+        if( dipha::mpi_utils::is_root( ) ) {
+            std::remove( "DIPHA_TEST_intrinsic_full_rips.diagram" );
+            if( !result_has_not_changed ) {
+                dipha::mpi_utils::error_printer_if_root( ) << "Dual reduction of intrinsic_full_rips is buggy!" << std::endl;
                 MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
             }
         }
