@@ -20,7 +20,7 @@ add_definitions(-std=c++11)
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-add_definitions(-std=c++11)
+add_definitions(-std=c++11 -w)
 endif()
 
 FIND_PACKAGE(MPI REQUIRED)
@@ -50,9 +50,9 @@ source_group(Header\ Files\\outputs FILES ${dipha_output_includes})
 source_group(Header\ Files\\data_structures FILES ${dipha_data_structures_includes})
 source_group(Header\ Files\\algorithms FILES ${dipha_algorithms_includes})
 
+enable_testing()
 get_target_property(regression_test_path regression_test LOCATION)
- add_custom_command(TARGET regression_test
-                    POST_BUILD
-                    COMMAND mpiexec -n 3 ${regression_test_path}
-                    WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
-                    )
+add_test(NAME regression_test
+         COMMAND mpiexec -n 3 ${regression_test_path}
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+        )
