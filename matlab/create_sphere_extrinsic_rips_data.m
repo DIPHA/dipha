@@ -27,5 +27,5 @@ function create_sphere_extrinsic_rips_data( num_points, dimension )
     points = random_points .* repmat( normalization_factor, dimension, 1 );
 
     %% save to disk in DIPHA format
-    save_embedded_complete_rips_complex( points, size( points, 1 ), filename );
+    save_extrinsic_full_rips_complex( points, size( points, 1 ), filename );
 end
