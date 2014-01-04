@@ -23,7 +23,7 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 
 namespace dipha {
     namespace algorithms {
-        inline void dualize( const std::string& input_filename, const std::string& output_filename )
+        inline void dualize_explicit_complex( const std::string& input_filename, const std::string& output_filename )
         {
             MPI_Barrier( MPI_COMM_WORLD );
 

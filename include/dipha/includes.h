@@ -61,7 +61,7 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 #include <dipha/algorithms/get_cell_to_filtration_map.h>
 #include <dipha/algorithms/generate_unreduced_columns.h>
 #include <dipha/algorithms/reduction_kernel.h>
-#include <dipha/algorithms/dualize.h>
+#include <dipha/algorithms/dualize_explicit_complex.h>
 #include <dipha/algorithms/compute_reduced_columns.h>
 
 #include <dipha/outputs/save_persistence_diagram.h>
