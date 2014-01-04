@@ -33,7 +33,7 @@ void print_help()
 void print_help_and_exit()
 {
     print_help();
-    exit( EXIT_FAILURE );
+    MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
 }
 
 void parse_command_line( int argc, char** argv, bool& benchmark, bool& dualize, std::string& input_filename, std::string& output_filename )
@@ -74,12 +74,6 @@ int main( int argc, char** argv )
 
     // take time at beggining of execution
     double time_at_start = MPI_Wtime();
-
-    // Debugger attach point hack:
-    //MPI_Barrier( MPI_COMM_WORLD );
-    //if( dipha::mpi_utils::is_root() )
-    //    system("pause");
-    //MPI_Barrier( MPI_COMM_WORLD );
 
     std::string input_filename; // name of file that contains the weighted cell complex
     std::string output_filename; // name of file that will contain the persistence diagram
