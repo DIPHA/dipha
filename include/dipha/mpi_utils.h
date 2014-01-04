@@ -205,33 +205,6 @@ namespace dipha {
         inline MPI_File file_open_write_only( const std::string& filename ) { return file_open( filename, MPI_MODE_WRONLY | MPI_MODE_CREATE ); }
 
         inline MPI_File file_open_read_write( const std::string& filename ) { return file_open( filename, MPI_MODE_RDWR | MPI_MODE_CREATE ); }
-
-        // this could be optimized: right now all processes look at the whole file ...
-        inline bool are_files_equal( const std::string& filename_1, const std::string& filename_2 )
-        {
-            MPI_File file_1 = file_open_read_only( filename_1 );
-            MPI_File file_2 = file_open_read_only( filename_2 );
-
-            MPI_Offset file_size_1;
-            MPI_File_get_size( file_1, &file_size_1 );
-
-            MPI_Offset file_size_2;
-            MPI_File_get_size( file_2, &file_size_2 );
-
-            std::vector< int8_t > content_1;
-            file_read_at_all_vector( file_1, 0, file_size_1, content_1 );
-
-            std::vector< int8_t > content_2;
-            file_read_at_all_vector( file_2, 0, file_size_2, content_2 );
-
-            MPI_File_close( &file_1 );
-            MPI_File_close( &file_2 );
-
-            if( content_1.size() == content_2.size() && std::equal( content_1.cbegin(), content_1.cend(), content_2.cbegin() ) )
-                return true;
-            else
-                return false;
-        }
     }
 }
 
