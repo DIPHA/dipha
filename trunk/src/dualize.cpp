@@ -32,7 +32,7 @@ void print_help()
 void print_help_and_exit()
 {
     print_help();
-    exit( EXIT_FAILURE );
+    MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
 }
 
 void parse_command_line( int argc, char** argv, bool& benchmark, std::string& input_filename, std::string& output_filename )
