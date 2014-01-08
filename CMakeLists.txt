@@ -103,103 +103,104 @@ message( STATUS "NUM_PROCESSES = ${NUM_PROCESSES}")
 set(NUM_TEST_RUNS 10)
 message( STATUS "NUM_TEST_RUNS = ${NUM_TEST_RUNS}") 
 
-FILE(GLOB unit_test_log_files "regression_data/*.log")
+FILE(GLOB unit_test_log_files "test_data/*.log")
 if(NOT( unit_test_log_files STREQUAL "" ) )
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove ${unit_test_log_files}) 
 endif()
 
-FILE(GLOB functional_test_temp_data "regression_data/*.DIPHA_TEST")
+FILE(GLOB functional_test_temp_data "test_data/*.DIPHA_TEST")
 if(NOT( functional_test_temp_data STREQUAL "" ) )
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove ${functional_test_temp_data}) 
 endif()
 
 add_test(NAME unit_tests
-         COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:unit_tests> --gtest_shuffle --gtest_repeat=${NUM_TEST_RUNS} --gtest_break_on_failure --gtest_random_seed=${RANDOM_SEED}
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:unit_tests> --gtest_shuffle 
+						 --gtest_repeat=${NUM_TEST_RUNS} --gtest_break_on_failure --gtest_random_seed=${RANDOM_SEED}
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME distributed_sort
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:test_distributed_sort>
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_dualize
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dualize> primal_explicit.complex dualize.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_dualize
          COMMAND ${CMAKE_COMMAND} -E compare_files dualize.DIPHA_TEST dual_explicit.complex
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_primal_cubical
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> cubical.complex primal_cubical.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_primal_cubical
          COMMAND ${CMAKE_COMMAND} -E compare_files primal_cubical.DIPHA_TEST cubical.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_dual_cubical
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual cubical.complex dual_cubical.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_dual_cubical
          COMMAND ${CMAKE_COMMAND} -E compare_files dual_cubical.DIPHA_TEST cubical.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_primal_explicit
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> primal_explicit.complex primal_explicit.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_primal_explicit
          COMMAND ${CMAKE_COMMAND} -E compare_files primal_explicit.DIPHA_TEST explicit.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_dual_explicit
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual dual_explicit.complex dual_explicit.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_dual_explicit
          COMMAND ${CMAKE_COMMAND} -E compare_files dual_explicit.DIPHA_TEST explicit.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_primal_extrinsic_full_rips
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> extrinsic_full_rips.complex primal_extrinsic_full_rips.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_primal_extrinsic_full_rips
          COMMAND ${CMAKE_COMMAND} -E compare_files primal_extrinsic_full_rips.DIPHA_TEST extrinsic_full_rips.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_dual_extrinsic_full_rips
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual extrinsic_full_rips.complex dual_extrinsic_full_rips.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_dual_extrinsic_full_rips
          COMMAND ${CMAKE_COMMAND} -E compare_files dual_extrinsic_full_rips.DIPHA_TEST extrinsic_full_rips.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_primal_intrinsic_full_rips
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> intrinsic_full_rips.complex primal_intrinsic_full_rips.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_primal_intrinsic_full_rips
          COMMAND ${CMAKE_COMMAND} -E compare_files primal_intrinsic_full_rips.DIPHA_TEST intrinsic_full_rips.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
 add_test(NAME create_dual_intrinsic_full_rips
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual intrinsic_full_rips.complex dual_intrinsic_full_rips.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_dual_intrinsic_full_rips
          COMMAND ${CMAKE_COMMAND} -E compare_files dual_intrinsic_full_rips.DIPHA_TEST intrinsic_full_rips.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
