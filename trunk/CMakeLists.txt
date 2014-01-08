@@ -79,9 +79,6 @@ target_link_libraries(dipha ${MPI_LIBRARIES})
 add_executable (dualize src/dualize.cpp)
 target_link_libraries(dualize ${MPI_LIBRARIES})
 
-add_executable (test_distributed_sort tests/test_distributed_sort.cpp)
-target_link_libraries(test_distributed_sort ${MPI_LIBRARIES})
-
 add_executable(unit_tests tests/unit_tests.cpp)
 target_link_libraries(unit_tests gtest ${MPI_LIBRARIES})
 
@@ -117,11 +114,6 @@ endif()
 add_test(NAME unit_tests
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:unit_tests> --gtest_shuffle 
 						 --gtest_repeat=${NUM_TEST_RUNS} --gtest_break_on_failure --gtest_random_seed=${RANDOM_SEED}
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-
-add_test(NAME distributed_sort
-         COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:test_distributed_sort>
          WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 
