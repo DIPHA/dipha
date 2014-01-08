@@ -34,11 +34,12 @@ if(MSVC OR MSVC_IDE)
         set(CMAKE_GENERATOR_TOOLSET "v110" CACHE STRING "Platform Toolset" FORCE)               
     endif()
     
-    # we need the following for gtest:
+    # we need the following for gtest
     if( MSVC_VERSION EQUAL 1700 )
         add_definitions(-D_VARIADIC_MAX=10)
     endif() 
 
+	# gtest need static runtime lib
     foreach(flag_var
         CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
         CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
@@ -60,7 +61,7 @@ FIND_PACKAGE(MPI REQUIRED)
 
 add_subdirectory(externals/gtest-1.7.0)
 
-include_directories (include ${MPI_INCLUDE_PATH} ${gtest_SOURCE_DIR}/include)
+include_directories (include externals ${MPI_INCLUDE_PATH} ${gtest_SOURCE_DIR}/include)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_COMPILE_FLAGS} ${GTEST_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_LINK_FLAGS} ${GTEST_LINK_FLAGS}")
