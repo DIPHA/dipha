@@ -28,26 +28,42 @@ if(MSVC OR MSVC_IDE)
         message(FATAL_ERROR "The project requires C++11 features. " 
         "You need at least Visual Studio 11 (Microsoft Visual Studio 2012)")
     endif()        
+    
     # Compilation using Microsoft Visual Studio 2013 seems to be stuck in an infinite loop ...
-    if( MSVC_VERSION GREATER 1700 ) 
-        set(CMAKE_GENERATOR_TOOLSET "v110" CACHE STRING "Platform Toolset" FORCE) 
+    if( MSVC_VERSION GREATER 1700 )
+        set(CMAKE_GENERATOR_TOOLSET "v110" CACHE STRING "Platform Toolset" FORCE)               
     endif()
+    
+    # we need the following for gtest:
+    if( MSVC_VERSION EQUAL 1700 )
+        add_definitions(-D_VARIADIC_MAX=10)
+    endif() 
+
+    foreach(flag_var
+        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+        if(${flag_var} MATCHES "/MD")
+            string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+        endif(${flag_var} MATCHES "/MD")
+    endforeach(flag_var)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-add_definitions(-std=c++11)
+    add_definitions(-std=c++11)
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-add_definitions(-std=c++11 -w)
+    add_definitions(-std=c++11 -w)
 endif()
 
 FIND_PACKAGE(MPI REQUIRED)
 
-include_directories (include ${MPI_INCLUDE_PATH})
+add_subdirectory(externals/gtest-1.7.0)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_COMPILE_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_LINK_FLAGS}")
+include_directories (include ${MPI_INCLUDE_PATH} ${gtest_SOURCE_DIR}/include)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_COMPILE_FLAGS} ${GTEST_CXX_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_LINK_FLAGS} ${GTEST_LINK_FLAGS}")
 
 FILE(GLOB_RECURSE all_dipha_includes "include/dipha/*.h")
 FILE(GLOB dipha_general_includes "include/dipha/*.h")
@@ -65,6 +81,9 @@ target_link_libraries(dualize ${MPI_LIBRARIES})
 add_executable (test_distributed_sort tests/test_distributed_sort.cpp)
 target_link_libraries(test_distributed_sort ${MPI_LIBRARIES})
 
+add_executable(unit_tests tests/unit_tests.cpp)
+target_link_libraries(unit_tests gtest ${MPI_LIBRARIES})
+
 source_group(Header\ Files FILES ${dipha_general_includes})
 source_group(Header\ Files\\inputs FILES ${dipha_input_includes})
 source_group(Header\ Files\\outputs FILES ${dipha_output_includes})
@@ -73,7 +92,31 @@ source_group(Header\ Files\\algorithms FILES ${dipha_algorithms_includes})
 
 enable_testing()
 
-set(NUM_PROCESSES 10)
+string(RANDOM LENGTH 4 ALPHABET 0123456789 RANDOM_SEED)
+math(EXPR RANDOM_SEED "${RANDOM_SEED} + 1")  
+message( STATUS "RANDOM_SEED = ${RANDOM_SEED}") 
+
+string(RANDOM LENGTH 1 ALPHABET 0123456789 NUM_PROCESSES)
+math(EXPR NUM_PROCESSES "${NUM_PROCESSES} + 1") 
+message( STATUS "NUM_PROCESSES = ${NUM_PROCESSES}") 
+
+set(NUM_TEST_RUNS 10)
+message( STATUS "NUM_TEST_RUNS = ${NUM_TEST_RUNS}") 
+
+FILE(GLOB unit_test_log_files "regression_data/*.log")
+if(NOT( unit_test_log_files STREQUAL "" ) )
+	execute_process(COMMAND ${CMAKE_COMMAND} -E remove ${unit_test_log_files}) 
+endif()
+
+FILE(GLOB functional_test_temp_data "regression_data/*.DIPHA_TEST")
+if(NOT( functional_test_temp_data STREQUAL "" ) )
+	execute_process(COMMAND ${CMAKE_COMMAND} -E remove ${functional_test_temp_data}) 
+endif()
+
+add_test(NAME unit_tests
+         COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:unit_tests> --gtest_shuffle --gtest_repeat=${NUM_TEST_RUNS} --gtest_break_on_failure --gtest_random_seed=${RANDOM_SEED}
+         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/regression_data
+        )
 
 add_test(NAME distributed_sort
          COMMAND mpiexec -n ${NUM_PROCESSES} $<TARGET_FILE:test_distributed_sort>
