@@ -24,7 +24,7 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 namespace dipha {
     namespace mpi_utils {
         enum message_tag {
-            MSG_UNREDUCED_COLUMNS, MSG_CO_BOUNDARIES_ANSWERS, MSG_DUALIZED_COLS, MSG_SCATTER_QUERIES, MSG_GATHER_ANSWERS, MSG_SET_GLOBAL_VALUES
+            MSG_UNREDUCED_COLUMNS, MSG_CO_BOUNDARIES_ANSWERS, MSG_DUALIZED_COLS, MSG_SCATTER_QUERIES, MSG_GATHER_ANSWERS, MSG_SET_GLOBAL_VALUES, MSG_TESTING
         };
 
         inline void finalize() { MPI_Finalize(); }
