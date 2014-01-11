@@ -48,7 +48,7 @@ namespace dipha {
         };
 
         inline std::ostream& cout_if_root()
-        { 
+        {
             static nullstream nullstreamer;
             if( is_root() )
                 return std::cout;
@@ -59,7 +59,7 @@ namespace dipha {
         inline std::ostream& error_printer_if_root()
         {
             static nullstream nullstreamer;
-            if( is_root( ) )
+            if( is_root() )
                 return std::cout << std::endl << "Error: ";
             else
                 return nullstreamer;
@@ -207,5 +207,32 @@ namespace dipha {
 
         inline MPI_File file_open_read_write( const std::string& filename ) { return file_open( filename, MPI_MODE_RDWR | MPI_MODE_CREATE ); }
     }
-}
 
+
+#ifdef DIPHA_TEST
+    TEST( mpi_utils, send_receive_vector )
+    {
+        std::minstd_rand generator( ::testing::UnitTest::GetInstance( )->random_seed( ) );
+        std::uniform_int_distribution< int > distribution( 0, 1 << 16 );
+        long test_size = distribution( generator );
+
+        std::vector< int > message_to_send( test_size, mpi_utils::get_rank( ) );
+        std::vector< MPI_Request > requests;
+        for( int target_rank = 0; target_rank < mpi_utils::get_num_processes( ); target_rank++ ) {
+            mpi_utils::non_blocking_send_vector( message_to_send, target_rank, mpi_utils::MSG_TESTING, requests );
+        }
+
+        std::vector< int > receive_buffer;
+        for( int target_rank = 0; target_rank < mpi_utils::get_num_processes( ); target_rank++ ) {
+            mpi_utils::receive_vector( receive_buffer, target_rank, mpi_utils::MSG_TESTING );
+            ASSERT_EQ( test_size, receive_buffer.size( ) );
+            if( !receive_buffer.empty( ) ) {
+                ASSERT_EQ( target_rank, *std::min_element( receive_buffer.cbegin( ), receive_buffer.cend( ) ) );
+                ASSERT_EQ( target_rank, *std::max_element( receive_buffer.cbegin( ), receive_buffer.cend( ) ) );
+            }
+        }
+
+        MPI_Waitall( (int)requests.size( ), requests.data( ), MPI_STATUSES_IGNORE );
+    }
+#endif
+}
