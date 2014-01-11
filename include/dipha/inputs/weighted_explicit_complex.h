@@ -116,3 +116,11 @@ namespace dipha {
         };
     }
 }
+
+#ifdef DIPHA_TEST
+struct ExplicitTest {
+    typedef dipha::inputs::weighted_explicit_complex complex_type;
+    static std::string get_test_filename( ) { return std::string( "primal_explicit.complex" ); }
+};
+INSTANTIATE_TYPED_TEST_CASE_P( Explicit, TestPrimalWeightedCellComplex, ExplicitTest );
+#endif

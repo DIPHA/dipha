@@ -19,6 +19,7 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 
 
 #define DIPHA_TEST
+
 #include <string>
 #include <gtest/gtest.h>
 #include <random>

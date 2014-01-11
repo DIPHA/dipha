@@ -221,21 +221,22 @@ namespace dipha {
 
 #ifdef DIPHA_TEST
     template< typename T >
-    class TestAbstractWeightedCellComplex : public ::testing::Test {
+    class TestPrimalWeightedCellComplex : public ::testing::Test {
         virtual void SetUp() {
-            complex.load_binary( T::get_test_filename() );
+            this->complex.load_binary( T::get_test_filename() );
         }
     public:
         typename T::complex_type complex;
     };
 
-    TYPED_TEST_CASE_P( TestAbstractWeightedCellComplex );
+    TYPED_TEST_CASE_P( TestPrimalWeightedCellComplex );
 
-    TYPED_TEST_P( TestAbstractWeightedCellComplex, is_empty )
+    TYPED_TEST_P( TestPrimalWeightedCellComplex, isNotEmpty )
     {
-        ASSERT_EQ( complex.get_num_cells(), 3375 );
+        const int64_t num_cells = complex.get_num_cells();
+        ASSERT_GT( num_cells, 0 );
     }
-    REGISTER_TYPED_TEST_CASE_P( TestAbstractWeightedCellComplex, is_empty );
+    REGISTER_TYPED_TEST_CASE_P( TestPrimalWeightedCellComplex, isNotEmpty );
 
 #endif
 
