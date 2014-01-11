@@ -24,6 +24,7 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 #include <algorithm>
 #include <iomanip>
 #include <cstdlib>
@@ -56,6 +57,7 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 #include <dipha/inputs/weighted_cubical_complex.h>
 #include <dipha/inputs/weighted_explicit_complex.h>
 #include <dipha/inputs/full_rips_complex.h>
+#include <dipha/inputs/sparse_rips_complex.h>
 
 #include <dipha/algorithms/get_filtration_to_cell_map.h>
 #include <dipha/algorithms/get_cell_to_filtration_map.h>
