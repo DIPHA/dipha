@@ -215,4 +215,28 @@ namespace dipha {
             }
         };
     }
+
+
 }
+
+#ifdef DIPHA_TEST
+    template< typename T >
+    class TestAbstractWeightedCellComplex : public ::testing::Test {
+        virtual void SetUp() {
+            complex.load_binary( T::get_test_filename() );
+        }
+    public:
+        typename T::complex_type complex;
+    };
+
+    TYPED_TEST_CASE_P( TestAbstractWeightedCellComplex );
+
+    TYPED_TEST_P( TestAbstractWeightedCellComplex, is_empty )
+    {
+        ASSERT_EQ( complex.get_num_cells(), 3375 );
+    }
+    REGISTER_TYPED_TEST_CASE_P( TestAbstractWeightedCellComplex, is_empty );
+
+#endif
+
+
