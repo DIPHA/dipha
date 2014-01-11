@@ -233,7 +233,7 @@ namespace dipha {
 
     TYPED_TEST_P( TestPrimalWeightedCellComplex, isNotEmpty )
     {
-        const int64_t num_cells = complex.get_num_cells();
+        const int64_t num_cells = this->complex.get_num_cells();
         ASSERT_GT( num_cells, 0 );
     }
     REGISTER_TYPED_TEST_CASE_P( TestPrimalWeightedCellComplex, isNotEmpty );
