@@ -102,6 +102,11 @@ int main( int argc, char** argv )
     case dipha::file_types::INTRINSIC_FULL_RIPS_COMPLEX:
         compute< dipha::inputs::full_rips_complex >( input_filename, dualize, output_filename );
         break;
+    case dipha::file_types::EXTRINSIC_SPARSE_RIPS_COMPLEX:
+      // Go to next case
+    case dipha::file_types::INTRINSIC_SPARSE_RIPS_COMPLEX:
+        compute< dipha::inputs::sparse_rips_complex >( input_filename, dualize, output_filename );
+        break;
     default:
         dipha::mpi_utils::error_printer_if_root() << "Unknown complex type in DIPHA file" << input_filename << std::endl;
         MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
