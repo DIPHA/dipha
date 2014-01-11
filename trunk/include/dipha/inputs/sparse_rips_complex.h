@@ -34,20 +34,20 @@ namespace dipha {
 
             std::vector<std::vector<double> > _m_distance_matrix;
 
-	    double _m_threshold;
+            double _m_threshold;
 
             // derived quantities
         protected:
 
-	    std::vector< int64_t > _m_full_indices_in_range;
+            std::vector< int64_t > _m_full_indices_in_range;
 
-	    std::vector< std::vector< int64_t > > _m_coboundaries;
+            std::vector< std::vector< int64_t > > _m_coboundaries;
 
             std::vector<std::vector<int64_t> > _m_binomials;
 
             std::vector< int64_t > _m_breakpoints_local_indices;
 
-	    int64_t _m_num_elements;
+            int64_t _m_num_elements;
 
             // contains the indices where a new dimension starts
             std::vector<int64_t> _m_breakpoints;
@@ -73,269 +73,272 @@ namespace dipha {
 
                 _precompute_breakpoints();
 
-		_compute_sparse_indices();
-		
+                _compute_sparse_indices();
+
             }
 
         protected:
 
-	    // Local version, in order to render hashing possible, possibly
-	    int get_process_id_for_full_index(int64_t full_idx) {
-	      return dipha::element_distribution::get_rank( num_full_indices(), full_idx);
-	    }
+            // Local version, in order to render hashing possible, possibly
+            int get_process_id_for_full_index( int64_t full_idx )
+            {
+                return dipha::element_distribution::get_rank( num_full_indices(), full_idx );
+            }
 
-	    
+
             int64_t num_full_indices() const
             {
                 return _m_breakpoints[ _m_upper_dim + 1 ];
             }
 
-	    // Note: This currently scales very badly with the number of points
-	    // (TODO: Sparse list representation?)
-	    void compute_coboundary(int64_t full_idx, 
-				    int64_t local_process_idx,
-				    std::vector<int64_t>& new_full_indices_buffer) {
+            // Note: This currently scales very badly with the number of points
+            // (TODO: Sparse list representation?)
+            void compute_coboundary( int64_t full_idx,
+                                     int64_t local_process_idx,
+                                     std::vector<int64_t>& new_full_indices_buffer )
+            {
 
-	      //std::cout << "compute_coboundary for " << full_idx << " " << local_process_idx << std::endl;
+                //std::cout << "compute_coboundary for " << full_idx << " " << local_process_idx << std::endl;
 
-	      std::vector<int64_t> vertex_indices;
-	      conversion( full_idx, std::back_inserter( vertex_indices ) );
+                std::vector<int64_t> vertex_indices;
+                conversion( full_idx, std::back_inserter( vertex_indices ) );
 
-	      int64_t max_element = vertex_indices.front();
+                int64_t max_element = vertex_indices.front();
 
-	      int64_t rows_to_check = vertex_indices.size();
-	      
-	      for( int64_t coboundary_candidate = 0; coboundary_candidate < _m_no_points; coboundary_candidate++) {
-		
-		bool makes_a_coboundary=true;
-		
-		for( int row_idx = 0; row_idx < rows_to_check; row_idx++ ) {
-		  int row = vertex_indices[row_idx];
-		  if(row == coboundary_candidate || _m_distance_matrix[row][coboundary_candidate] > _m_threshold) {
-		    makes_a_coboundary = false;
-		    //std::cout << "Column " << coboundary_candidate << "is not a coboundary for " << full_idx << std::endl;
-		    break;
-		  }
-		}
-		
-		if(makes_a_coboundary) {
-		  
-		  int64_t full_idx_of_new_coboundary;
-		  conversion_with_extra_index(vertex_indices.begin(),vertex_indices.end(),coboundary_candidate, full_idx_of_new_coboundary);
+                int64_t rows_to_check = vertex_indices.size();
 
-		  //std::cout << "Found a new coboundary for " << full_idx << " " << coboundary_candidate << " " << full_idx_of_new_coboundary << std::endl;
+                for( int64_t coboundary_candidate = 0; coboundary_candidate < _m_no_points; coboundary_candidate++ ) {
 
-		  _m_coboundaries[local_process_idx].push_back(full_idx_of_new_coboundary);
-		  if( coboundary_candidate > max_element ) {
-		    new_full_indices_buffer.push_back(full_idx_of_new_coboundary);
-		    //std::cout << "NEW CELL " << full_idx_of_new_coboundary << " " << max_element << " " << coboundary_candidate << " " << " " << full_idx <<  " " << local_process_idx << " V: ";
-		    for(int i = 0; i < vertex_indices.size(); i++) {
-		      std::cout << vertex_indices[i] << " ";
-		    }
-		    std::cout << mpi_utils::get_rank() << std::endl;
-		  }
-		}
-		
-	      }
-	    }
+                    bool makes_a_coboundary = true;
 
-	      
+                    for( int row_idx = 0; row_idx < rows_to_check; row_idx++ ) {
+                        int row = vertex_indices[ row_idx ];
+                        if( row == coboundary_candidate || _m_distance_matrix[ row ][ coboundary_candidate ] > _m_threshold ) {
+                            makes_a_coboundary = false;
+                            //std::cout << "Column " << coboundary_candidate << "is not a coboundary for " << full_idx << std::endl;
+                            break;
+                        }
+                    }
 
-	    void _compute_sparse_indices() {
+                    if( makes_a_coboundary ) {
 
-	      std::vector<std::vector<int64_t> > full_indices_to_handle_per_dimension;
-	      full_indices_to_handle_per_dimension.resize(_m_upper_dim+1);
+                        int64_t full_idx_of_new_coboundary;
+                        conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), coboundary_candidate, full_idx_of_new_coboundary );
+
+                        //std::cout << "Found a new coboundary for " << full_idx << " " << coboundary_candidate << " " << full_idx_of_new_coboundary << std::endl;
+
+                        _m_coboundaries[ local_process_idx ].push_back( full_idx_of_new_coboundary );
+                        if( coboundary_candidate > max_element ) {
+                            new_full_indices_buffer.push_back( full_idx_of_new_coboundary );
+                            //std::cout << "NEW CELL " << full_idx_of_new_coboundary << " " << max_element << " " << coboundary_candidate << " " << " " << full_idx <<  " " << local_process_idx << " V: ";
+                            for( int i = 0; i < vertex_indices.size(); i++ ) {
+                                std::cout << vertex_indices[ i ] << " ";
+                            }
+                            std::cout << mpi_utils::get_rank() << std::endl;
+                        }
+                    }
+
+                }
+            }
 
 
-	      int64_t local_process_idx = 0;
 
-	      int num_processes = dipha::mpi_utils::get_num_processes();
+            void _compute_sparse_indices()
+            {
 
-	      // Assign the vertices to the right processes (normally, the 0th process should get all of them without hashing)
-	      std::vector<int64_t> simplex_of_dim_0;
-	      simplex_of_dim_0.push_back(-1);
-
-	      int64_t full_index_of_vertex;
-
-	      for( int point_idx = 0; point_idx < _m_no_points; point_idx++ ) {
-		simplex_of_dim_0[0] = point_idx;
-		conversion_with_skip( simplex_of_dim_0.begin(), simplex_of_dim_0.end(), simplex_of_dim_0.end(), full_index_of_vertex );
-		
-		int64_t process_id_for_vertex = get_process_id_for_full_index(full_index_of_vertex);
-
-		if( process_id_for_vertex == dipha::mpi_utils::get_rank() ) {
-		  full_indices_to_handle_per_dimension[0].push_back(full_index_of_vertex);
-		}
-	      }
-
-	      std::copy( full_indices_to_handle_per_dimension[0].begin(), full_indices_to_handle_per_dimension[0].end(),
-			 std::back_inserter(_m_full_indices_in_range) );
-
-	      // Go in increasing dimension...
-	      for( int dim = 0; dim < _m_upper_dim; dim++ ) {
-
-		// find out the simplices in codimension one
-		std::vector<int64_t> full_index_of_codimension_one_buffer;
-		
-		//std::cout << "NOW " << local_process_idx << " " << _m_coboundaries.size() << std::endl;
-
-		assert( local_process_idx == _m_coboundaries.size() );
-
-		_m_coboundaries.resize( _m_coboundaries.size() + full_indices_to_handle_per_dimension[dim].size() );
-
-		for( auto full_index_it = full_indices_to_handle_per_dimension[dim].begin();
-		     full_index_it != full_indices_to_handle_per_dimension[dim].end();
-		     full_index_it++) {
-		  compute_coboundary(*full_index_it, local_process_idx, full_index_of_codimension_one_buffer);
-		  local_process_idx++;
-		}
-		
-		std::vector<std::vector<int64_t> > codimension_one_full_indices_send_buffer;
-		codimension_one_full_indices_send_buffer.resize( num_processes );
-
-		// Send the newly found indices to the appropriate indices
-		
-		MPI_Barrier( MPI_COMM_WORLD );
-
-		for( auto new_idx_it = full_index_of_codimension_one_buffer.begin();
-                     new_idx_it != full_index_of_codimension_one_buffer.end();
-		     new_idx_it++) {
-		  
-		  int responsible_process = get_process_id_for_full_index(*new_idx_it);
-		  codimension_one_full_indices_send_buffer[responsible_process].push_back(*new_idx_it);
-		}
-		std::vector< MPI_Request > queries_requests;
-		for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		  mpi_utils::non_blocking_send_vector( codimension_one_full_indices_send_buffer[process_id], process_id, mpi_utils::MSG_REPORT_INDICES_OF_SPARSE_RIPS, queries_requests );
-		}
+                std::vector<std::vector<int64_t> > full_indices_to_handle_per_dimension;
+                full_indices_to_handle_per_dimension.resize( _m_upper_dim + 1 );
 
 
-		// ...and receive the results from other processes to handle the next dimension
+                int64_t local_process_idx = 0;
 
-		std::vector<std::vector<int64_t> > codimension_one_full_indices_receive_buffer;
-		codimension_one_full_indices_receive_buffer.resize( num_processes );
+                int num_processes = dipha::mpi_utils::get_num_processes();
 
-		for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		  int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
-		  mpi_utils::receive_vector( codimension_one_full_indices_receive_buffer[ source ], source, mpi_utils::MSG_REPORT_INDICES_OF_SPARSE_RIPS );
-		  std::copy( codimension_one_full_indices_receive_buffer[ source ].begin(), 
-			     codimension_one_full_indices_receive_buffer[ source ].end(), 
-			     std::back_inserter( full_indices_to_handle_per_dimension[dim+1] ) );
-		}
+                // Assign the vertices to the right processes (normally, the 0th process should get all of them without hashing)
+                std::vector<int64_t> simplex_of_dim_0;
+                simplex_of_dim_0.push_back( -1 );
 
-		std::sort( full_indices_to_handle_per_dimension[dim+1].begin(), full_indices_to_handle_per_dimension[dim+1].end() );
-		
-		std::copy( full_indices_to_handle_per_dimension[dim+1].begin(), full_indices_to_handle_per_dimension[dim+1].end(),
-			   std::back_inserter(_m_full_indices_in_range) );
+                int64_t full_index_of_vertex;
 
-		MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
-		
-	      }
+                for( int point_idx = 0; point_idx < _m_no_points; point_idx++ ) {
+                    simplex_of_dim_0[ 0 ] = point_idx;
+                    conversion_with_skip( simplex_of_dim_0.begin(), simplex_of_dim_0.end(), simplex_of_dim_0.end(), full_index_of_vertex );
 
-	      // Now, tell everyone how many simplices are you responsible for:
-	      int64_t no_of_local_simplices = _m_full_indices_in_range.size();
-	      
-	      // Silly: Create vector of size one to use send_vector from mpi_utils
-	      std::vector<int64_t> wrap_no_of_local_simplices;
+                    int64_t process_id_for_vertex = get_process_id_for_full_index( full_index_of_vertex );
 
-	      wrap_no_of_local_simplices.push_back( no_of_local_simplices );
+                    if( process_id_for_vertex == dipha::mpi_utils::get_rank() ) {
+                        full_indices_to_handle_per_dimension[ 0 ].push_back( full_index_of_vertex );
+                    }
+                }
 
-	      std::vector< MPI_Request > queries_requests;
+                std::copy( full_indices_to_handle_per_dimension[ 0 ].begin(), full_indices_to_handle_per_dimension[ 0 ].end(),
+                           std::back_inserter( _m_full_indices_in_range ) );
 
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		mpi_utils::non_blocking_send_vector( wrap_no_of_local_simplices, process_id, mpi_utils::MSG_REPORT_INDICES_OF_SPARSE_RIPS, queries_requests );
-	      }
+                // Go in increasing dimension...
+                for( int dim = 0; dim < _m_upper_dim; dim++ ) {
 
-	      // And gather the information of each process
-	      _m_breakpoints_local_indices.push_back(0);
-	      std::vector<int64_t> no_of_local_simplices_from_process;
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		// Silly again: Receive using a vector of size one
-		mpi_utils::receive_vector( no_of_local_simplices_from_process, process_id, mpi_utils::MSG_REPORT_INDICES_OF_SPARSE_RIPS );
-		assert(no_of_local_simplices_from_process.size()==1);
-		_m_breakpoints_local_indices.push_back(no_of_local_simplices_from_process[0]);
-	      }
-	      // Finally, sum up the simplices
-	      for(int64_t process_id = 1; process_id <= num_processes; process_id++) {
-		_m_breakpoints_local_indices[process_id] += _m_breakpoints_local_indices[process_id-1];
-	      }
-	      _m_num_elements = _m_breakpoints_local_indices.back();
+                    // find out the simplices in codimension one
+                    std::vector<int64_t> full_index_of_codimension_one_buffer;
 
-	      std::cout << "Found " << _m_num_elements << " simplices" << std::endl;
+                    //std::cout << "NOW " << local_process_idx << " " << _m_coboundaries.size() << std::endl;
 
-	      MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
+                    assert( local_process_idx == _m_coboundaries.size() );
 
-	      // Now, each process knows that total number of simplices, and therefore, the range of repsonsibility for each process
+                    _m_coboundaries.resize( _m_coboundaries.size() + full_indices_to_handle_per_dimension[ dim ].size() );
 
-	      // Send the full indices to the responsible process
-	      std::vector< std::vector< int64_t > > send_buffers;
-	      send_buffers.resize( num_processes );
-	      
-	      for( int64_t local_sparse_idx = 0; local_sparse_idx < _m_full_indices_in_range.size(); local_sparse_idx++ ) {
-		int64_t sparse_idx = _m_breakpoints_local_indices[dipha::mpi_utils::get_rank()] + local_sparse_idx;
-		
-		int process_responsible_for_current = dipha::element_distribution::get_rank(_m_num_elements, sparse_idx);
-		//std::cout << dipha::mpi_utils::get_rank() << "Responsible is " << _m_num_elements << " " << local_sparse_idx << " " << sparse_idx << " " <<  process_responsible_for_current << std::endl;
-		send_buffers[process_responsible_for_current].push_back( _m_full_indices_in_range[local_sparse_idx]);
-	      }
+                    for( auto full_index_it = full_indices_to_handle_per_dimension[ dim ].begin();
+                         full_index_it != full_indices_to_handle_per_dimension[ dim ].end();
+                         full_index_it++ ) {
+                        compute_coboundary( *full_index_it, local_process_idx, full_index_of_codimension_one_buffer );
+                        local_process_idx++;
+                    }
 
-	      queries_requests.clear();
-	      for( int target = 0; target < num_processes; target++ )
-                dipha::mpi_utils::non_blocking_send_vector( send_buffers[ target ], target, dipha::mpi_utils::MSG_SPARSE_RIPS_DISTRIBUTE_SIMPLICES, queries_requests );
+                    std::vector<std::vector<int64_t> > codimension_one_full_indices_send_buffer;
+                    codimension_one_full_indices_send_buffer.resize( num_processes );
 
-	      std::vector< std::vector< int64_t> > queries_buffer;
-	      queries_buffer.resize( num_processes );
-	      for( int idx = 0; idx < num_processes; idx++ ) {
-                int source = ( dipha::mpi_utils::get_rank() + idx ) % num_processes;
-                dipha::mpi_utils::receive_vector( queries_buffer[ source ], source, dipha::mpi_utils::MSG_SPARSE_RIPS_DISTRIBUTE_SIMPLICES );
-	      }
+                    // Send the newly found indices to the appropriate indices
 
-	      MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
+                    MPI_Barrier( MPI_COMM_WORLD );
 
-	      // queries buffer contains the indices of the process, store them (overwrite the _m_full_indices_in_range)
-	      _m_full_indices_in_range.clear();
-	      for( int64_t proc_idx = 0; proc_idx < queries_buffer.size(); proc_idx++ ) {
-		std::copy( queries_buffer[proc_idx].begin(), queries_buffer[proc_idx].end(), std::back_inserter(_m_full_indices_in_range) );
-	      }
-	      // sort the indices
-	      std::sort( _m_full_indices_in_range.begin(), _m_full_indices_in_range.end() );
-	      
-	      for(int64_t i = 0; i <=  _m_full_indices_in_range.size() ; i++) {
-		std::cout << dipha::mpi_utils::get_rank() << " " << _m_full_indices_in_range[i] << std::endl;
-	      }
+                    for( auto new_idx_it = full_index_of_codimension_one_buffer.begin();
+                         new_idx_it != full_index_of_codimension_one_buffer.end();
+                         new_idx_it++ ) {
 
-	      // Finally, tell everyone the maximal global index in the range (so that everyone can ask at the right place)
-	      int64_t maximal_global_idx = _m_full_indices_in_range.back();
-	      // Silly: Create vector of size one to use send_vector from mpi_utils
-	      std::vector<int64_t> wrap_maximal_global_idx;
+                        int responsible_process = get_process_id_for_full_index( *new_idx_it );
+                        codimension_one_full_indices_send_buffer[ responsible_process ].push_back( *new_idx_it );
+                    }
+                    std::vector< MPI_Request > queries_requests;
+                    for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                        mpi_utils::non_blocking_send_vector( codimension_one_full_indices_send_buffer[ process_id ], process_id, mpi_utils::MSG_REPORT_INDICES_OF_SPARSE_RIPS, queries_requests );
+                    }
 
-	      wrap_maximal_global_idx.push_back( maximal_global_idx );
 
-	      queries_requests.clear();
+                    // ...and receive the results from other processes to handle the next dimension
 
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		mpi_utils::non_blocking_send_vector( wrap_maximal_global_idx, process_id, dipha::mpi_utils::MSG_REPORT_MAXIMAL_GLOBAL_INDEX_IN_SPARSE_RIPS, queries_requests );
-	      }
+                    std::vector<std::vector<int64_t> > codimension_one_full_indices_receive_buffer;
+                    codimension_one_full_indices_receive_buffer.resize( num_processes );
 
-	      // And gather the information of each process
-	      // Overwrite _m_breakpoints_local_indices
-	      _m_breakpoints_local_indices.clear();
-	      _m_breakpoints_local_indices.push_back(0);
-	      std::vector<int64_t> breakpoint_from_process;
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		// Silly again: Receive using a vector of size one
-		dipha::mpi_utils::receive_vector( breakpoint_from_process, process_id, dipha::mpi_utils::MSG_REPORT_MAXIMAL_GLOBAL_INDEX_IN_SPARSE_RIPS );
-		assert(breakpoint_from_process.size()==1);
-		_m_breakpoints_local_indices.push_back(1+breakpoint_from_process[0]);
-	      }
+                    for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                        int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
+                        mpi_utils::receive_vector( codimension_one_full_indices_receive_buffer[ source ], source, mpi_utils::MSG_REPORT_INDICES_OF_SPARSE_RIPS );
+                        std::copy( codimension_one_full_indices_receive_buffer[ source ].begin(),
+                                   codimension_one_full_indices_receive_buffer[ source ].end(),
+                                   std::back_inserter( full_indices_to_handle_per_dimension[ dim + 1 ] ) );
+                    }
 
-	      std::cout << "Process " << dipha::mpi_utils::get_rank() << " has " <<  _m_full_indices_in_range.size() << " simplices" << std::endl;
-	      for(int64_t i = 0; i <=  num_processes; i++) {
-		std::cout << dipha::mpi_utils::get_rank() << " breakpoint " << i <<  " "<< _m_breakpoints_local_indices[i] << std::endl;
-	      }
-	      
+                    std::sort( full_indices_to_handle_per_dimension[ dim + 1 ].begin(), full_indices_to_handle_per_dimension[ dim + 1 ].end() );
 
-	    }
+                    std::copy( full_indices_to_handle_per_dimension[ dim + 1 ].begin(), full_indices_to_handle_per_dimension[ dim + 1 ].end(),
+                               std::back_inserter( _m_full_indices_in_range ) );
+
+                    MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
+
+                }
+
+                // Now, tell everyone how many simplices are you responsible for:
+                int64_t no_of_local_simplices = _m_full_indices_in_range.size();
+
+                // Silly: Create vector of size one to use send_vector from mpi_utils
+                std::vector<int64_t> wrap_no_of_local_simplices;
+
+                wrap_no_of_local_simplices.push_back( no_of_local_simplices );
+
+                std::vector< MPI_Request > queries_requests;
+
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    mpi_utils::non_blocking_send_vector( wrap_no_of_local_simplices, process_id, mpi_utils::MSG_REPORT_INDICES_OF_SPARSE_RIPS, queries_requests );
+                }
+
+                // And gather the information of each process
+                _m_breakpoints_local_indices.push_back( 0 );
+                std::vector<int64_t> no_of_local_simplices_from_process;
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    // Silly again: Receive using a vector of size one
+                    mpi_utils::receive_vector( no_of_local_simplices_from_process, process_id, mpi_utils::MSG_REPORT_INDICES_OF_SPARSE_RIPS );
+                    assert( no_of_local_simplices_from_process.size() == 1 );
+                    _m_breakpoints_local_indices.push_back( no_of_local_simplices_from_process[ 0 ] );
+                }
+                // Finally, sum up the simplices
+                for( int64_t process_id = 1; process_id <= num_processes; process_id++ ) {
+                    _m_breakpoints_local_indices[ process_id ] += _m_breakpoints_local_indices[ process_id - 1 ];
+                }
+                _m_num_elements = _m_breakpoints_local_indices.back();
+
+                std::cout << "Found " << _m_num_elements << " simplices" << std::endl;
+
+                MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
+
+                // Now, each process knows that total number of simplices, and therefore, the range of repsonsibility for each process
+
+                // Send the full indices to the responsible process
+                std::vector< std::vector< int64_t > > send_buffers;
+                send_buffers.resize( num_processes );
+
+                for( int64_t local_sparse_idx = 0; local_sparse_idx < _m_full_indices_in_range.size(); local_sparse_idx++ ) {
+                    int64_t sparse_idx = _m_breakpoints_local_indices[ dipha::mpi_utils::get_rank() ] + local_sparse_idx;
+
+                    int process_responsible_for_current = dipha::element_distribution::get_rank( _m_num_elements, sparse_idx );
+                    //std::cout << dipha::mpi_utils::get_rank() << "Responsible is " << _m_num_elements << " " << local_sparse_idx << " " << sparse_idx << " " <<  process_responsible_for_current << std::endl;
+                    send_buffers[ process_responsible_for_current ].push_back( _m_full_indices_in_range[ local_sparse_idx ] );
+                }
+
+                queries_requests.clear();
+                for( int target = 0; target < num_processes; target++ )
+                    dipha::mpi_utils::non_blocking_send_vector( send_buffers[ target ], target, dipha::mpi_utils::MSG_SPARSE_RIPS_DISTRIBUTE_SIMPLICES, queries_requests );
+
+                std::vector< std::vector< int64_t> > queries_buffer;
+                queries_buffer.resize( num_processes );
+                for( int idx = 0; idx < num_processes; idx++ ) {
+                    int source = ( dipha::mpi_utils::get_rank() + idx ) % num_processes;
+                    dipha::mpi_utils::receive_vector( queries_buffer[ source ], source, dipha::mpi_utils::MSG_SPARSE_RIPS_DISTRIBUTE_SIMPLICES );
+                }
+
+                MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
+
+                // queries buffer contains the indices of the process, store them (overwrite the _m_full_indices_in_range)
+                _m_full_indices_in_range.clear();
+                for( int64_t proc_idx = 0; proc_idx < queries_buffer.size(); proc_idx++ ) {
+                    std::copy( queries_buffer[ proc_idx ].begin(), queries_buffer[ proc_idx ].end(), std::back_inserter( _m_full_indices_in_range ) );
+                }
+                // sort the indices
+                std::sort( _m_full_indices_in_range.begin(), _m_full_indices_in_range.end() );
+
+                for( int64_t i = 0; i <= _m_full_indices_in_range.size(); i++ ) {
+                    std::cout << dipha::mpi_utils::get_rank() << " " << _m_full_indices_in_range[ i ] << std::endl;
+                }
+
+                // Finally, tell everyone the maximal global index in the range (so that everyone can ask at the right place)
+                int64_t maximal_global_idx = _m_full_indices_in_range.back();
+                // Silly: Create vector of size one to use send_vector from mpi_utils
+                std::vector<int64_t> wrap_maximal_global_idx;
+
+                wrap_maximal_global_idx.push_back( maximal_global_idx );
+
+                queries_requests.clear();
+
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    mpi_utils::non_blocking_send_vector( wrap_maximal_global_idx, process_id, dipha::mpi_utils::MSG_REPORT_MAXIMAL_GLOBAL_INDEX_IN_SPARSE_RIPS, queries_requests );
+                }
+
+                // And gather the information of each process
+                // Overwrite _m_breakpoints_local_indices
+                _m_breakpoints_local_indices.clear();
+                _m_breakpoints_local_indices.push_back( 0 );
+                std::vector<int64_t> breakpoint_from_process;
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    // Silly again: Receive using a vector of size one
+                    dipha::mpi_utils::receive_vector( breakpoint_from_process, process_id, dipha::mpi_utils::MSG_REPORT_MAXIMAL_GLOBAL_INDEX_IN_SPARSE_RIPS );
+                    assert( breakpoint_from_process.size() == 1 );
+                    _m_breakpoints_local_indices.push_back( 1 + breakpoint_from_process[ 0 ] );
+                }
+
+                std::cout << "Process " << dipha::mpi_utils::get_rank() << " has " << _m_full_indices_in_range.size() << " simplices" << std::endl;
+                for( int64_t i = 0; i <= num_processes; i++ ) {
+                    std::cout << dipha::mpi_utils::get_rank() << " breakpoint " << i << " " << _m_breakpoints_local_indices[ i ] << std::endl;
+                }
+
+
+            }
 
             int64_t _get_max_dim() const
             {
@@ -345,40 +348,42 @@ namespace dipha {
 
             int64_t _get_num_cells() const
             {
-	      return _m_num_elements;
+                return _m_num_elements;
             }
 
 
-	    int64_t get_locally_sparse_from_full_index( int64_t full_idx ) const {
-	      auto it = std::lower_bound ( _m_full_indices_in_range.begin(),  _m_full_indices_in_range.end(), full_idx);
-	      assert(it!= _m_full_indices_in_range.end());
-	      assert(*it == full_idx);
-	      int64_t result = dipha::element_distribution::get_local_begin(_m_num_elements,dipha::mpi_utils::get_rank()) + (it-_m_full_indices_in_range.begin());
-	      std::cout << "full to sparse: " << dipha::mpi_utils::get_rank() << " " << full_idx <<  " " << result << std::endl;
-	      return result;
-	    }
+            int64_t get_locally_sparse_from_full_index( int64_t full_idx ) const
+            {
+                auto it = std::lower_bound( _m_full_indices_in_range.begin(), _m_full_indices_in_range.end(), full_idx );
+                assert( it != _m_full_indices_in_range.end() );
+                assert( *it == full_idx );
+                int64_t result = dipha::element_distribution::get_local_begin( _m_num_elements, dipha::mpi_utils::get_rank() ) + ( it - _m_full_indices_in_range.begin() );
+                std::cout << "full to sparse: " << dipha::mpi_utils::get_rank() << " " << full_idx << " " << result << std::endl;
+                return result;
+            }
 
-	    int64_t get_locally_full_from_sparse_index( int64_t sparse_idx ) const {
-	      
-	      int process_id = dipha::mpi_utils::get_rank();
-	      
-	      int64_t local_begin = dipha::element_distribution::get_local_begin(_m_num_elements,process_id);
-	      if(sparse_idx >= dipha::element_distribution::get_local_end(_m_num_elements,process_id)) {
-		std::cout << mpi_utils::get_rank() << " " << "Got sparse_idx " << sparse_idx << ", but my range is " << local_begin << ", " << dipha::element_distribution::get_local_end(_m_num_elements,process_id) << std::endl;
-	      }
-	      assert(sparse_idx >= local_begin);
-	      assert(sparse_idx < dipha::element_distribution::get_local_end(_m_num_elements,process_id));
-		     
-	      sparse_idx -= local_begin;
+            int64_t get_locally_full_from_sparse_index( int64_t sparse_idx ) const
+            {
 
-	      return _m_full_indices_in_range[sparse_idx];
-	    }
+                int process_id = dipha::mpi_utils::get_rank();
+
+                int64_t local_begin = dipha::element_distribution::get_local_begin( _m_num_elements, process_id );
+                if( sparse_idx >= dipha::element_distribution::get_local_end( _m_num_elements, process_id ) ) {
+                    std::cout << mpi_utils::get_rank() << " " << "Got sparse_idx " << sparse_idx << ", but my range is " << local_begin << ", " << dipha::element_distribution::get_local_end( _m_num_elements, process_id ) << std::endl;
+                }
+                assert( sparse_idx >= local_begin );
+                assert( sparse_idx < dipha::element_distribution::get_local_end( _m_num_elements, process_id ) );
+
+                sparse_idx -= local_begin;
+
+                return _m_full_indices_in_range[ sparse_idx ];
+            }
 
             int64_t _get_local_dim( int64_t idx ) const
             {
-	      int64_t full_idx = get_locally_full_from_sparse_index(idx);
-	      return _get_local_dim_full_index( full_idx );
-	    }
+                int64_t full_idx = get_locally_full_from_sparse_index( idx );
+                return _get_local_dim_full_index( full_idx );
+            }
 
             int64_t _get_local_dim_full_index( int64_t idx ) const
             {
@@ -391,9 +396,9 @@ namespace dipha {
 
             double _get_local_value( int64_t idx ) const
             {
-	      int64_t full_idx = get_locally_full_from_sparse_index(idx);
-	      return _get_local_value_full_index( full_idx );
-	    }
+                int64_t full_idx = get_locally_full_from_sparse_index( idx );
+                return _get_local_value_full_index( full_idx );
+            }
 
 
             double _get_local_value_full_index( int64_t idx ) const
@@ -404,192 +409,191 @@ namespace dipha {
                 return diameter( points.begin(), points.end() );
             }
 
-	    /* Not possible to determine locally (at least in this way)
-            void _get_local_boundary( int64_t idx, std::vector< int64_t >& boundary ) const
+            /* Not possible to determine locally (at least in this way)
+                void _get_local_boundary( int64_t idx, std::vector< int64_t >& boundary ) const
+                {
+                int64_t full_idx = get_locally_full_from_sparse_index(idx);
+                return _get_local_boundary_full_index( full_idx, boundary );
+                }
+                */
+
+            void _get_global_boundaries( const std::vector< int64_t >& queries,
+                                         data_structures::write_once_array_of_arrays< int64_t >& answers ) const
             {
-	      int64_t full_idx = get_locally_full_from_sparse_index(idx);
-	      return _get_local_boundary_full_index( full_idx, boundary );
-	    }
-	    */
+                return _get_global_co_boundaries( queries, answers, false );
+            }
 
-	    void _get_global_boundaries( const std::vector< int64_t >& queries,
-					 data_structures::write_once_array_of_arrays< int64_t >& answers ) const 
-	    {
-	      return _get_global_co_boundaries(queries, answers, false);
-	    }
-
-	    void _get_global_coboundaries( const std::vector< int64_t >& queries,
-					   data_structures::write_once_array_of_arrays< int64_t >& answers ) const 
-	    {
-	      return _get_global_co_boundaries(queries, answers, true);
-	    }
-	    
-	    int process_for_full_index (int64_t full_idx) const {
-	      auto it = std::upper_bound ( _m_breakpoints_local_indices.begin(),  _m_breakpoints_local_indices.end(), full_idx);
-	      std::cout << "pffi returns " << full_idx << " -> " << (it-_m_breakpoints_local_indices.begin()-1) << std::endl;
-	      return it-_m_breakpoints_local_indices.begin()-1;
-	    }
-	    
-	    void _get_global_co_boundaries( const std::vector< int64_t >& queries,
-					    data_structures::write_once_array_of_arrays< int64_t >& answers,
-					    bool dual) const
+            void _get_global_coboundaries( const std::vector< int64_t >& queries,
+                                           data_structures::write_once_array_of_arrays< int64_t >& answers ) const
             {
-	      int num_processes = dipha::mpi_utils::get_num_processes();
+                return _get_global_co_boundaries( queries, answers, true );
+            }
 
-  	      std::vector< std::vector< int64_t > > queries_buffer;
-	      element_distribution::scatter_queries( queries, _m_num_elements, queries_buffer );
-	      
-	      // process queries (This is a two step approach)
+            int process_for_full_index( int64_t full_idx ) const
+            {
+                auto it = std::upper_bound( _m_breakpoints_local_indices.begin(), _m_breakpoints_local_indices.end(), full_idx );
+                std::cout << "pffi returns " << full_idx << " -> " << ( it - _m_breakpoints_local_indices.begin() - 1 ) << std::endl;
+                return it - _m_breakpoints_local_indices.begin() - 1;
+            }
 
-	      // first, we compute which full indices are needed at all
-	      std::map< int64_t, int64_t > full_to_sparse_indices_in_boundary;
-	      std::vector< int64_t > boundary;
-	      for( int source = 0; source < num_processes; source++ ) {
-		for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size( ); idx++ ) {
-		  std::cout << "New el_idx (sparse): " << dipha::mpi_utils::get_rank() << " " << queries_buffer[ source ][ idx ] << std::endl;
-		  int64_t full_idx = get_locally_full_from_sparse_index(queries_buffer[ source ][ idx ]); 
-		  if( dual ) {
-		    //get_local_coboundary( full_idx, boundary );
-		  }
-		  else {
-		    _get_local_boundary_full_index( full_idx, boundary );
-		  }
-		  for( auto it = boundary.begin(); it != boundary.end(); it++ ) {
-		    full_to_sparse_indices_in_boundary[*it] = -1; // dummy entry for now
-		  }
-		}
-	      }
-	      
-	      // Next, we need to ask for the sparse indices of all collected full indices 
-	      std::vector< std::vector< int64_t > > inner_queries_send_buffer;
-	      std::vector< std::vector< int64_t > > inner_queries_recv_buffer;
-	      // std::vector< std::vector< int64_t > > inner_answers_send_buffer;
-	      std::vector< std::vector< int64_t > > inner_answers_recv_buffer;
-	      
-	      inner_queries_send_buffer.resize(num_processes);
+            void _get_global_co_boundaries( const std::vector< int64_t >& queries,
+                                            data_structures::write_once_array_of_arrays< int64_t >& answers,
+                                            bool dual ) const
+            {
+                int num_processes = dipha::mpi_utils::get_num_processes();
 
-	      std::cout << "KEYS " << std::flush;
+                std::vector< std::vector< int64_t > > queries_buffer;
+                element_distribution::scatter_queries( queries, _m_num_elements, queries_buffer );
 
-	      for( auto map_it = full_to_sparse_indices_in_boundary.begin();
-		   map_it != full_to_sparse_indices_in_boundary.end();
-		   map_it++ ) {
-		int64_t key = map_it->first;
-		std::cout << key << " " << std::flush;
-		assert(map_it->second==-1);
-		int process_for_current = process_for_full_index( key );
-		std::cout << "To process " << process_for_current << "! " << std::flush;
-		inner_queries_send_buffer[process_for_current].push_back(key);
-	      }
-	      std::cout << std::endl;
-	      
-	      std::vector< MPI_Request > queries_requests;
+                // process queries (This is a two step approach)
 
-	      // Send the queries now to ask for the sparse indices
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		mpi_utils::non_blocking_send_vector( inner_queries_send_buffer[process_id], process_id, mpi_utils::MSG_QUERY_SPARSE_INDICES, queries_requests );
-	      }
-	      
-	      // Receive the query results 
+                // first, we compute which full indices are needed at all
+                std::map< int64_t, int64_t > full_to_sparse_indices_in_boundary;
+                std::vector< int64_t > boundary;
+                for( int source = 0; source < num_processes; source++ ) {
+                    for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size(); idx++ ) {
+                        std::cout << "New el_idx (sparse): " << dipha::mpi_utils::get_rank() << " " << queries_buffer[ source ][ idx ] << std::endl;
+                        int64_t full_idx = get_locally_full_from_sparse_index( queries_buffer[ source ][ idx ] );
+                        if( dual ) {
+                            //get_local_coboundary( full_idx, boundary );
+                        } else {
+                            _get_local_boundary_full_index( full_idx, boundary );
+                        }
+                        for( auto it = boundary.begin(); it != boundary.end(); it++ ) {
+                            full_to_sparse_indices_in_boundary[ *it ] = -1; // dummy entry for now
+                        }
+                    }
+                }
 
-	      inner_queries_recv_buffer.resize(num_processes);
+                // Next, we need to ask for the sparse indices of all collected full indices 
+                std::vector< std::vector< int64_t > > inner_queries_send_buffer;
+                std::vector< std::vector< int64_t > > inner_queries_recv_buffer;
+                // std::vector< std::vector< int64_t > > inner_answers_send_buffer;
+                std::vector< std::vector< int64_t > > inner_answers_recv_buffer;
 
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		  int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
-		  mpi_utils::receive_vector( inner_queries_recv_buffer[ source ], source, mpi_utils::MSG_QUERY_SPARSE_INDICES );
-	      }
+                inner_queries_send_buffer.resize( num_processes );
 
-	      MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
-		  
+                std::cout << "KEYS " << std::flush;
 
-	      // Sent out the answers
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		  int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
-		  for( int64_t query_buf_idx = 0 ; query_buf_idx < inner_queries_recv_buffer[ source ].size(); query_buf_idx++ ) {
-		    std::cout << mpi_utils::get_rank() << " " << "FROM 2" << std::endl;
-		    inner_queries_recv_buffer[source][query_buf_idx] = get_locally_sparse_from_full_index( inner_queries_recv_buffer[source][query_buf_idx]);
-		  }
-		  mpi_utils::non_blocking_send_vector( inner_queries_recv_buffer[process_id], process_id, mpi_utils::MSG_QUERY_SPARSE_INDICES, queries_requests );
-	      }
+                for( auto map_it = full_to_sparse_indices_in_boundary.begin();
+                     map_it != full_to_sparse_indices_in_boundary.end();
+                     map_it++ ) {
+                    int64_t key = map_it->first;
+                    std::cout << key << " " << std::flush;
+                    assert( map_it->second == -1 );
+                    int process_for_current = process_for_full_index( key );
+                    std::cout << "To process " << process_for_current << "! " << std::flush;
+                    inner_queries_send_buffer[ process_for_current ].push_back( key );
+                }
+                std::cout << std::endl;
 
-	      inner_answers_recv_buffer.resize( num_processes );
-	      // Reveive the answers
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) {
-		  int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
-		  mpi_utils::receive_vector( inner_answers_recv_buffer[ source ], source, mpi_utils::MSG_QUERY_SPARSE_INDICES );
-	      }
+                std::vector< MPI_Request > queries_requests;
 
-	      // .. to fill the values of the map
-	      for(int64_t process_id = 0; process_id < num_processes; process_id++) { 
-		assert( inner_queries_send_buffer[process_id].size() == inner_answers_recv_buffer[ process_id ].size() );
-		for( int64_t query_idx = 0; query_idx < inner_queries_send_buffer[process_id].size(); query_idx++) {
-		  int64_t key = inner_queries_send_buffer[process_id][query_idx];
-		  int64_t value = inner_answers_recv_buffer[process_id][query_idx];
-		  full_to_sparse_indices_in_boundary[key] = value;
-		}
-	      }
+                // Send the queries now to ask for the sparse indices
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    mpi_utils::non_blocking_send_vector( inner_queries_send_buffer[ process_id ], process_id, mpi_utils::MSG_QUERY_SPARSE_INDICES, queries_requests );
+                }
 
-	      // With the map filled, iterate through the queries once again, and answer them
-	      std::vector< std::vector< int64_t > > answer_buffer;
+                // Receive the query results 
 
-	      std::vector< data_structures::write_once_array_of_arrays< int64_t > > buffer( mpi_utils::get_num_processes( ) );
-	      for( int source = 0; source < num_processes; source++ ) {
-		buffer[ source ].init( queries_buffer[ source ].size( ) );
-		for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size( ); idx++ ) {
-		  int64_t full_idx = get_locally_full_from_sparse_index(queries_buffer[ source ][ idx ]); 
-		  if( dual ) {
-		    //get_local_coboundary( full_idx, boundary );
-		  }
-		  else {
-		    _get_local_boundary_full_index( full_idx, boundary );
-		  }
-		  std::vector< int64_t> sparse_idx_boundaries;
-		  for( int bd_idx = 0; bd_idx < boundary.size(); bd_idx++ ) {
-		    assert( full_to_sparse_indices_in_boundary.find( boundary[bd_idx] ) != full_to_sparse_indices_in_boundary.end());
-		    assert( full_to_sparse_indices_in_boundary[ boundary[bd_idx] ] != -1);
-		    sparse_idx_boundaries.push_back( full_to_sparse_indices_in_boundary[ boundary[bd_idx] ] );
-		  }
-		  buffer[ source ].set( idx, sparse_idx_boundaries.begin( ), sparse_idx_boundaries.end( ) );
-		}
-	      }
-	      
-	      // send results back to other ranks (including myself)
-	      std::vector< MPI_Request > answers_requests;
-	      for( int target = 0; target < num_processes; target++ )
-		mpi_utils::non_blocking_send_vector( buffer[ target ].data, target, mpi_utils::MSG_CO_BOUNDARIES_ANSWERS, answers_requests );
-	      
-	      // receive answers from other ranks
-	      std::vector< data_structures::write_once_array_of_arrays< int64_t > > answers_of_ranks( num_processes );
-	      for( int idx = 0; idx < num_processes; idx++ ) {
-		int source = ( mpi_utils::get_rank( ) + idx ) % num_processes;
-		mpi_utils::receive_vector( answers_of_ranks[ source ].data, source, mpi_utils::MSG_CO_BOUNDARIES_ANSWERS );
-	      }
-	      
-	      std::vector< int64_t > answers_of_ranks_indices( num_processes, 0 );
-	      for( int64_t idx = 0; idx < (int64_t)queries.size( ); idx++ ) {
-		int target_rank = element_distribution::get_rank( _m_num_elements, queries[ idx ] );
-		const auto& begin = answers_of_ranks[ target_rank ].begin( answers_of_ranks_indices[ target_rank ] );
-		const auto& end = answers_of_ranks[ target_rank ].end( answers_of_ranks_indices[ target_rank ] );
-		answers_of_ranks_indices[ target_rank ]++;
-		answers.set( idx, begin, end );
-	      }
-	      
-	      // need to make sure that the above sends completed before their buffer goes out of scope
-	      MPI_Waitall( (int)answers_requests.size( ), answers_requests.data( ), MPI_STATUSES_IGNORE );
-	      
-	      MPI_Barrier( MPI_COMM_WORLD );
+                inner_queries_recv_buffer.resize( num_processes );
 
-	      // Debug: Report result
-	      std::cout << mpi_utils::get_rank() << " Queries ";
-	      for(int i=0; i < queries.size(); i++) {
-		std::cout << queries[i] << " ";
-	      }
-	      std::cout << "Answer array: ";
-	      for(int j=0; j< answers.data.size();j++) {
-		std::cout << answers.data[j] << " ";
-	      }
-	      std::cout << std::endl;
-	      
-	    }
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
+                    mpi_utils::receive_vector( inner_queries_recv_buffer[ source ], source, mpi_utils::MSG_QUERY_SPARSE_INDICES );
+                }
+
+                MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
+
+
+                // Sent out the answers
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
+                    for( int64_t query_buf_idx = 0; query_buf_idx < inner_queries_recv_buffer[ source ].size(); query_buf_idx++ ) {
+                        std::cout << mpi_utils::get_rank() << " " << "FROM 2" << std::endl;
+                        inner_queries_recv_buffer[ source ][ query_buf_idx ] = get_locally_sparse_from_full_index( inner_queries_recv_buffer[ source ][ query_buf_idx ] );
+                    }
+                    mpi_utils::non_blocking_send_vector( inner_queries_recv_buffer[ process_id ], process_id, mpi_utils::MSG_QUERY_SPARSE_INDICES, queries_requests );
+                }
+
+                inner_answers_recv_buffer.resize( num_processes );
+                // Reveive the answers
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
+                    mpi_utils::receive_vector( inner_answers_recv_buffer[ source ], source, mpi_utils::MSG_QUERY_SPARSE_INDICES );
+                }
+
+                // .. to fill the values of the map
+                for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
+                    assert( inner_queries_send_buffer[ process_id ].size() == inner_answers_recv_buffer[ process_id ].size() );
+                    for( int64_t query_idx = 0; query_idx < inner_queries_send_buffer[ process_id ].size(); query_idx++ ) {
+                        int64_t key = inner_queries_send_buffer[ process_id ][ query_idx ];
+                        int64_t value = inner_answers_recv_buffer[ process_id ][ query_idx ];
+                        full_to_sparse_indices_in_boundary[ key ] = value;
+                    }
+                }
+
+                // With the map filled, iterate through the queries once again, and answer them
+                std::vector< std::vector< int64_t > > answer_buffer;
+
+                std::vector< data_structures::write_once_array_of_arrays< int64_t > > buffer( mpi_utils::get_num_processes() );
+                for( int source = 0; source < num_processes; source++ ) {
+                    buffer[ source ].init( queries_buffer[ source ].size() );
+                    for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size(); idx++ ) {
+                        int64_t full_idx = get_locally_full_from_sparse_index( queries_buffer[ source ][ idx ] );
+                        if( dual ) {
+                            //get_local_coboundary( full_idx, boundary );
+                        } else {
+                            _get_local_boundary_full_index( full_idx, boundary );
+                        }
+                        std::vector< int64_t> sparse_idx_boundaries;
+                        for( int bd_idx = 0; bd_idx < boundary.size(); bd_idx++ ) {
+                            assert( full_to_sparse_indices_in_boundary.find( boundary[ bd_idx ] ) != full_to_sparse_indices_in_boundary.end() );
+                            assert( full_to_sparse_indices_in_boundary[ boundary[ bd_idx ] ] != -1 );
+                            sparse_idx_boundaries.push_back( full_to_sparse_indices_in_boundary[ boundary[ bd_idx ] ] );
+                        }
+                        buffer[ source ].set( idx, sparse_idx_boundaries.begin(), sparse_idx_boundaries.end() );
+                    }
+                }
+
+                // send results back to other ranks (including myself)
+                std::vector< MPI_Request > answers_requests;
+                for( int target = 0; target < num_processes; target++ )
+                    mpi_utils::non_blocking_send_vector( buffer[ target ].data, target, mpi_utils::MSG_CO_BOUNDARIES_ANSWERS, answers_requests );
+
+                // receive answers from other ranks
+                std::vector< data_structures::write_once_array_of_arrays< int64_t > > answers_of_ranks( num_processes );
+                for( int idx = 0; idx < num_processes; idx++ ) {
+                    int source = ( mpi_utils::get_rank() + idx ) % num_processes;
+                    mpi_utils::receive_vector( answers_of_ranks[ source ].data, source, mpi_utils::MSG_CO_BOUNDARIES_ANSWERS );
+                }
+
+                std::vector< int64_t > answers_of_ranks_indices( num_processes, 0 );
+                for( int64_t idx = 0; idx < (int64_t)queries.size(); idx++ ) {
+                    int target_rank = element_distribution::get_rank( _m_num_elements, queries[ idx ] );
+                    const auto& begin = answers_of_ranks[ target_rank ].begin( answers_of_ranks_indices[ target_rank ] );
+                    const auto& end = answers_of_ranks[ target_rank ].end( answers_of_ranks_indices[ target_rank ] );
+                    answers_of_ranks_indices[ target_rank ]++;
+                    answers.set( idx, begin, end );
+                }
+
+                // need to make sure that the above sends completed before their buffer goes out of scope
+                MPI_Waitall( (int)answers_requests.size(), answers_requests.data(), MPI_STATUSES_IGNORE );
+
+                MPI_Barrier( MPI_COMM_WORLD );
+
+                // Debug: Report result
+                std::cout << mpi_utils::get_rank() << " Queries ";
+                for( int i = 0; i < queries.size(); i++ ) {
+                    std::cout << queries[ i ] << " ";
+                }
+                std::cout << "Answer array: ";
+                for( int j = 0; j < answers.data.size(); j++ ) {
+                    std::cout << answers.data[ j ] << " ";
+                }
+                std::cout << std::endl;
+
+            }
 
             void _get_local_boundary_full_index( int64_t idx, std::vector< int64_t >& boundary ) const
             {
@@ -634,19 +638,19 @@ namespace dipha {
                 return;
             }
 
-	    /* Not possible  to determine locally (at least in this way)
-	       However, we could compute it during load binary and send it around (not done currently)
-            void _get_local_coboundary( int64_t idx, std::vector< int64_t >& coboundary ) const
-            {
-	      // Special case, as we have already computed that
-	      int process_id = dipha::mpi_utils::get_rank();
-	      assert( _m_breakpoints_local_indices[process_id] <= idx );
-	      assert( idx < _m_breakpoints_local_indices[process_id+1] );
-	      idx -= _m_breakpoints_local_indices[process_id];
-	      coboundary.clear();
-	      std::copy(_m_coboundaries[idx].begin(), _m_coboundaries[idx].end(), std::back_inserter(coboundary));
-	    }
-	    */
+            /* Not possible  to determine locally (at least in this way)
+               However, we could compute it during load binary and send it around (not done currently)
+               void _get_local_coboundary( int64_t idx, std::vector< int64_t >& coboundary ) const
+               {
+               // Special case, as we have already computed that
+               int process_id = dipha::mpi_utils::get_rank();
+               assert( _m_breakpoints_local_indices[process_id] <= idx );
+               assert( idx < _m_breakpoints_local_indices[process_id+1] );
+               idx -= _m_breakpoints_local_indices[process_id];
+               coboundary.clear();
+               std::copy(_m_coboundaries[idx].begin(), _m_coboundaries[idx].end(), std::back_inserter(coboundary));
+               }
+               */
 
         protected:
 
@@ -659,7 +663,7 @@ namespace dipha {
             void _load_binary_from_point_coordinates( MPI_File file )
             {
 
-   	        MPI_Offset offset;
+                MPI_Offset offset;
 
                 // read preamble
                 std::vector< int64_t > preamble;
@@ -669,11 +673,11 @@ namespace dipha {
                 int64_t point_dim = preamble[ 3 ];
                 _m_upper_dim = preamble[ 4 ];
 
-		offset = preamble.size() * sizeof( int64_t );
+                offset = preamble.size() * sizeof( int64_t );
 
-		mpi_utils::file_read_at( file, offset, _m_threshold);
+                mpi_utils::file_read_at( file, offset, _m_threshold );
 
-		offset += sizeof(double);
+                offset += sizeof( double );
 
                 std::vector< double > point_coordinates;
 
@@ -710,7 +714,7 @@ namespace dipha {
             void _load_binary_from_distance_matrix( MPI_File file )
             {
 
-   	        MPI_Offset offset;
+                MPI_Offset offset;
 
                 // read preamble
                 std::vector< int64_t > preamble;
@@ -719,18 +723,18 @@ namespace dipha {
                 _m_no_points = preamble[ 2 ];
                 _m_upper_dim = preamble[ 3 ];
 
-		offset = preamble.size() * sizeof( int64_t );
+                offset = preamble.size() * sizeof( int64_t );
 
-		mpi_utils::file_read_at( file, offset, _m_threshold);
+                mpi_utils::file_read_at( file, offset, _m_threshold );
 
-		std::cout << "Threshold is " << _m_threshold << std::endl;
+                std::cout << "Threshold is " << _m_threshold << std::endl;
 
-		offset += sizeof(double);
+                offset += sizeof( double );
 
                 int64_t matrix_size = _m_no_points*_m_no_points;
 
                 std::vector< double > distances;
-		mpi_utils::file_read_at_all_vector( file, offset, matrix_size, distances );
+                mpi_utils::file_read_at_all_vector( file, offset, matrix_size, distances );
 
 
                 _m_distance_matrix.resize( _m_no_points );
@@ -797,7 +801,7 @@ namespace dipha {
             template<typename OutputIterator>
             OutputIterator conversion( int64_t idx, OutputIterator out ) const
             {
-   	        int64_t k = _get_local_dim_full_index( idx );
+                int64_t k = _get_local_dim_full_index( idx );
                 idx -= _m_breakpoints[ k ];
                 int64_t bcoeff = _m_no_points - 1;
                 for( ; k >= 0; k-- ) {
@@ -875,7 +879,7 @@ namespace dipha {
                 return ind;
             }
 
-      };
+        };
 
     }
 }
