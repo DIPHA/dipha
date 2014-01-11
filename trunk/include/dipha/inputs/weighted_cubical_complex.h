@@ -250,6 +250,6 @@ namespace dipha {
         typedef dipha::inputs::weighted_cubical_complex complex_type;
         static std::string get_test_filename() { return std::string( "cubical.complex" ); }
     };
-    INSTANTIATE_TYPED_TEST_CASE_P( Cubical, TestAbstractWeightedCellComplex, CubicalTest );
+    INSTANTIATE_TYPED_TEST_CASE_P( Cubical, TestPrimalWeightedCellComplex, CubicalTest );
 #endif
 
