@@ -215,8 +215,6 @@ namespace dipha {
             }
         };
     }
-
-
 }
 
 #ifdef DIPHA_TEST
@@ -231,12 +229,46 @@ namespace dipha {
 
     TYPED_TEST_CASE_P( TestPrimalWeightedCellComplex );
 
-    TYPED_TEST_P( TestPrimalWeightedCellComplex, isNotEmpty )
+    TYPED_TEST_P( TestPrimalWeightedCellComplex, IsNotEmpty )
     {
         const int64_t num_cells = this->complex.get_num_cells();
         ASSERT_GT( num_cells, 0 );
     }
-    REGISTER_TYPED_TEST_CASE_P( TestPrimalWeightedCellComplex, isNotEmpty );
+
+    TYPED_TEST_P( TestPrimalWeightedCellComplex, BoundaryDim )
+    {
+        const int64_t num_cells = this->complex.get_num_cells();
+
+        std::vector< int64_t > cells;
+        dipha::data_structures::write_once_array_of_arrays< int64_t > boundaries;
+        std::vector< int64_t > cells_dim;
+        for( int64_t idx = 0; idx < num_cells; idx++ )
+            cells.push_back( idx );
+        this->complex.get_global_boundaries( cells, boundaries );
+        this->complex.get_global_dims( cells, cells_dim );
+
+        std::vector< int64_t > boundaries_entries;
+        std::vector< int64_t > boundaries_entries_dim;
+        for( int64_t idx = 0; idx < num_cells; idx++ ) {
+            for( auto it = boundaries.begin( idx ); it != boundaries.end( idx ); it++ ) {
+                boundaries_entries.push_back( *it );
+            }
+        }
+        this->complex.get_global_dims( boundaries_entries, boundaries_entries_dim );
+
+        auto iterator_of_boundaries_entries_dim = boundaries_entries_dim.cbegin( );
+        auto iterator_of_cells_dim = cells_dim.cbegin( );
+
+        for( int64_t idx = 0; idx < num_cells; idx++ ) {
+            int64_t dim_of_cell = *iterator_of_cells_dim++;
+            for( auto it = boundaries.begin( idx ); it != boundaries.end( idx ); it++ ) {
+                int64_t dim_of_boundary_entry = *iterator_of_boundaries_entries_dim++;
+                ASSERT_EQ( dim_of_boundary_entry, dim_of_cell - 1 );
+            }
+        }
+    }
+
+    REGISTER_TYPED_TEST_CASE_P( TestPrimalWeightedCellComplex, IsNotEmpty, BoundaryDim );
 
 #endif
 

@@ -210,7 +210,7 @@ namespace dipha {
 
 
 #ifdef DIPHA_TEST
-    TEST( mpi_utils, send_receive_vector )
+    TEST( mpiUtils, sendReceiveVector)
     {
         std::minstd_rand generator( ::testing::UnitTest::GetInstance( )->random_seed( ) );
         std::uniform_int_distribution< int > distribution( 0, 1 << 16 );

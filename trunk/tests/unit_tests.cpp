@@ -17,19 +17,12 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 
-
 #define DIPHA_TEST
 
-#include <string>
 #include <gtest/gtest.h>
-#include <random>
-#include <limits>
 
 
 #include <dipha/includes.h>
-
-
-
 
 int main( int argc, char **argv )
 {
