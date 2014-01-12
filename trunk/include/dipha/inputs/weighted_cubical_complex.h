@@ -251,5 +251,6 @@ namespace dipha {
         static std::string get_test_filename() { return std::string( "cubical.complex" ); }
     };
     INSTANTIATE_TYPED_TEST_CASE_P( Cubical, TestPrimalWeightedCellComplex, CubicalTest );
+    INSTANTIATE_TYPED_TEST_CASE_P( Cubical, TestDualWeightedCellComplex, CubicalTest );
 #endif
 

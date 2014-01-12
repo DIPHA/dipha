@@ -883,3 +883,33 @@ namespace dipha {
 
     }
 }
+
+#ifdef DIPHA_TEST
+    struct ExtrinsicSparseRipsTest {
+        typedef dipha::inputs::sparse_rips_complex complex_type;
+        static std::string get_test_filename( ) { return std::string( "extrinsic_sparse_rips.complex" ); }
+    };
+    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRips, TestPrimalWeightedCellComplex, ExtrinsicSparseRipsTest );
+    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRips, TestDualWeightedCellComplex, ExtrinsicSparseRipsTest );
+
+    struct ExtrinsicSparseRipsLargeThresholdTest {
+        typedef dipha::inputs::sparse_rips_complex complex_type;
+        static std::string get_test_filename( ) { return std::string( "extrinsic_sparse_rips_large_threshold.complex" ); }
+    };
+    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRipsLargeThreshold, TestPrimalWeightedCellComplex, ExtrinsicSparseRipsLargeThresholdTest );
+    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRipsLargeThreshold, TestDualWeightedCellComplex, ExtrinsicSparseRipsLargeThresholdTest );
+
+    struct IntrinsicSparseRipsTest {
+        typedef dipha::inputs::sparse_rips_complex complex_type;
+        static std::string get_test_filename( ) { return std::string( "intrinsic_sparse_rips.complex" ); }
+    };
+    INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRips, TestPrimalWeightedCellComplex, IntrinsicSparseRipsTest );
+    INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRips, TestDualWeightedCellComplex, IntrinsicSparseRipsTest );
+
+    struct IntrinsicSparseRipsLargeThresholdTest {
+        typedef dipha::inputs::sparse_rips_complex complex_type;
+        static std::string get_test_filename( ) { return std::string( "intrinsic_sparse_rips_large_threshold.complex" ); }
+    };
+    INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRipsLargeThreshold, TestPrimalWeightedCellComplex, IntrinsicSparseRipsLargeThresholdTest );
+    INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRipsLargeThreshold, TestDualWeightedCellComplex, IntrinsicSparseRipsLargeThresholdTest );
+#endif
