@@ -31,6 +31,10 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 #include <cstdint>
 #include <climits>
 #include <cassert>
+#include <random>
+
+#include <gtest/gtest.h>
+#define DIPHA_TEST
 
 // MPI include
 #include <mpi.h>
