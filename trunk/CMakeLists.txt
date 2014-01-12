@@ -74,10 +74,10 @@ FILE(GLOB dipha_output_includes "include/dipha/outputs/*.h")
 FILE(GLOB dipha_algorithms_includes "include/dipha/algorithms/*.h")
 
 add_executable (dipha src/dipha.cpp ${all_dipha_includes})
-target_link_libraries(dipha ${MPI_LIBRARIES})
+target_link_libraries(dipha gtest ${MPI_LIBRARIES})
 
 add_executable (dualize src/dualize.cpp)
-target_link_libraries(dualize ${MPI_LIBRARIES})
+target_link_libraries(dualize gtest ${MPI_LIBRARIES})
 
 add_executable(unit_tests tests/unit_tests.cpp)
 target_link_libraries(unit_tests gtest ${MPI_LIBRARIES})
