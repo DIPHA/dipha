@@ -260,7 +260,14 @@ namespace dipha {
             }
         }
     }
-    REGISTER_TYPED_TEST_CASE_P( TestPrimalWeightedCellComplex, BoundaryDim );
+
+    TYPED_TEST_P( TestPrimalWeightedCellComplex, AnotherPrimalTest )
+    {
+        //...
+    }
+
+    REGISTER_TYPED_TEST_CASE_P( TestPrimalWeightedCellComplex, BoundaryDim, AnotherPrimalTest );
+
 
     template< typename T >
     class TestDualWeightedCellComplex : public ::testing::Test {
@@ -305,8 +312,13 @@ namespace dipha {
             }
         }
     }
-    REGISTER_TYPED_TEST_CASE_P( TestDualWeightedCellComplex, CoboundaryDim );
 
+    TYPED_TEST_P( TestDualWeightedCellComplex, AnotherDualTest )
+    {
+        //...
+    }
+
+    REGISTER_TYPED_TEST_CASE_P( TestDualWeightedCellComplex, CoboundaryDim, AnotherDualTest );
 #endif
 
 
