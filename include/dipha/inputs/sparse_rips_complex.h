@@ -41,8 +41,6 @@ namespace dipha {
 
             std::vector< int64_t > _m_full_indices_in_range;
 
-            std::vector< std::vector< int64_t > > _m_coboundaries;
-
             std::vector<std::vector<int64_t> > _m_binomials;
 
             std::vector< int64_t > _m_breakpoints_local_indices;
@@ -93,21 +91,25 @@ namespace dipha {
 
             // Note: This currently scales very badly with the number of points
             // (TODO: Sparse list representation?)
-            void compute_coboundary( int64_t full_idx,
-                                     int64_t local_process_idx,
-                                     std::vector<int64_t>& new_full_indices_buffer )
+	    // scan_full_column=false means: only look for the coboundaries such that
+	    // the new vertex has the largest index among all indices
+            void _get_local_coboundary_full_index( int64_t full_idx,
+						   std::vector<int64_t>& coboundary,
+						   bool scan_full_column = false ) const
             {
 
                 //std::cout << "compute_coboundary for " << full_idx << " " << local_process_idx << std::endl;
 
+ 	        coboundary.clear();
+
                 std::vector<int64_t> vertex_indices;
                 conversion( full_idx, std::back_inserter( vertex_indices ) );
 
-                int64_t max_element = vertex_indices.front();
+		int64_t start_idx_for_scan = scan_full_column ? 0 : vertex_indices.front();
 
                 int64_t rows_to_check = vertex_indices.size();
 
-                for( int64_t coboundary_candidate = 0; coboundary_candidate < _m_no_points; coboundary_candidate++ ) {
+                for( int64_t coboundary_candidate = start_idx_for_scan; coboundary_candidate < _m_no_points; coboundary_candidate++ ) {
 
                     bool makes_a_coboundary = true;
 
@@ -124,18 +126,7 @@ namespace dipha {
 
                         int64_t full_idx_of_new_coboundary;
                         conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), coboundary_candidate, full_idx_of_new_coboundary );
-
-                        //std::cout << "Found a new coboundary for " << full_idx << " " << coboundary_candidate << " " << full_idx_of_new_coboundary << std::endl;
-
-                        _m_coboundaries[ local_process_idx ].push_back( full_idx_of_new_coboundary );
-                        if( coboundary_candidate > max_element ) {
-                            new_full_indices_buffer.push_back( full_idx_of_new_coboundary );
-                            //std::cout << "NEW CELL " << full_idx_of_new_coboundary << " " << max_element << " " << coboundary_candidate << " " << " " << full_idx <<  " " << local_process_idx << " V: ";
-                            for( int i = 0; i < vertex_indices.size(); i++ ) {
-                                std::cout << vertex_indices[ i ] << " ";
-                            }
-                            std::cout << mpi_utils::get_rank() << std::endl;
-                        }
+			coboundary.push_back( full_idx_of_new_coboundary );
                     }
 
                 }
@@ -149,8 +140,6 @@ namespace dipha {
                 std::vector<std::vector<int64_t> > full_indices_to_handle_per_dimension;
                 full_indices_to_handle_per_dimension.resize( _m_upper_dim + 1 );
 
-
-                int64_t local_process_idx = 0;
 
                 int num_processes = dipha::mpi_utils::get_num_processes();
 
@@ -182,15 +171,12 @@ namespace dipha {
 
                     //std::cout << "NOW " << local_process_idx << " " << _m_coboundaries.size() << std::endl;
 
-                    assert( local_process_idx == _m_coboundaries.size() );
-
-                    _m_coboundaries.resize( _m_coboundaries.size() + full_indices_to_handle_per_dimension[ dim ].size() );
-
                     for( auto full_index_it = full_indices_to_handle_per_dimension[ dim ].begin();
                          full_index_it != full_indices_to_handle_per_dimension[ dim ].end();
                          full_index_it++ ) {
-                        compute_coboundary( *full_index_it, local_process_idx, full_index_of_codimension_one_buffer );
-                        local_process_idx++;
+		      std::vector<int64_t> coboundary;
+		      _get_local_coboundary_full_index( *full_index_it, coboundary, false );
+		      std::copy(coboundary.begin(), coboundary.end(), std::back_inserter(full_index_of_codimension_one_buffer));
                     }
 
                     std::vector<std::vector<int64_t> > codimension_one_full_indices_send_buffer;
@@ -264,7 +250,7 @@ namespace dipha {
                 }
                 _m_num_elements = _m_breakpoints_local_indices.back();
 
-                std::cout << "Found " << _m_num_elements << " simplices" << std::endl;
+                //std::cout << "Found " << _m_num_elements << " simplices" << std::endl;
 
                 MPI_Waitall( (int)queries_requests.size(), queries_requests.data(), MPI_STATUSES_IGNORE );
 
@@ -303,9 +289,11 @@ namespace dipha {
                 // sort the indices
                 std::sort( _m_full_indices_in_range.begin(), _m_full_indices_in_range.end() );
 
-                for( int64_t i = 0; i <= _m_full_indices_in_range.size(); i++ ) {
+		/*
+                for( int64_t i = 0; i < _m_full_indices_in_range.size(); i++ ) {
                     std::cout << dipha::mpi_utils::get_rank() << " " << _m_full_indices_in_range[ i ] << std::endl;
                 }
+		*/
 
                 // Finally, tell everyone the maximal global index in the range (so that everyone can ask at the right place)
                 int64_t maximal_global_idx = _m_full_indices_in_range.back();
@@ -331,11 +319,12 @@ namespace dipha {
                     assert( breakpoint_from_process.size() == 1 );
                     _m_breakpoints_local_indices.push_back( 1 + breakpoint_from_process[ 0 ] );
                 }
-
+		/*
                 std::cout << "Process " << dipha::mpi_utils::get_rank() << " has " << _m_full_indices_in_range.size() << " simplices" << std::endl;
                 for( int64_t i = 0; i <= num_processes; i++ ) {
                     std::cout << dipha::mpi_utils::get_rank() << " breakpoint " << i << " " << _m_breakpoints_local_indices[ i ] << std::endl;
                 }
+		*/
 
 
             }
@@ -358,7 +347,7 @@ namespace dipha {
                 assert( it != _m_full_indices_in_range.end() );
                 assert( *it == full_idx );
                 int64_t result = dipha::element_distribution::get_local_begin( _m_num_elements, dipha::mpi_utils::get_rank() ) + ( it - _m_full_indices_in_range.begin() );
-                std::cout << "full to sparse: " << dipha::mpi_utils::get_rank() << " " << full_idx << " " << result << std::endl;
+                //std::cout << "full to sparse: " << dipha::mpi_utils::get_rank() << " " << full_idx << " " << result << std::endl;
                 return result;
             }
 
@@ -368,9 +357,11 @@ namespace dipha {
                 int process_id = dipha::mpi_utils::get_rank();
 
                 int64_t local_begin = dipha::element_distribution::get_local_begin( _m_num_elements, process_id );
+		/*
                 if( sparse_idx >= dipha::element_distribution::get_local_end( _m_num_elements, process_id ) ) {
                     std::cout << mpi_utils::get_rank() << " " << "Got sparse_idx " << sparse_idx << ", but my range is " << local_begin << ", " << dipha::element_distribution::get_local_end( _m_num_elements, process_id ) << std::endl;
                 }
+		*/
                 assert( sparse_idx >= local_begin );
                 assert( sparse_idx < dipha::element_distribution::get_local_end( _m_num_elements, process_id ) );
 
@@ -432,7 +423,7 @@ namespace dipha {
             int process_for_full_index( int64_t full_idx ) const
             {
                 auto it = std::upper_bound( _m_breakpoints_local_indices.begin(), _m_breakpoints_local_indices.end(), full_idx );
-                std::cout << "pffi returns " << full_idx << " -> " << ( it - _m_breakpoints_local_indices.begin() - 1 ) << std::endl;
+                //std::cout << "pffi returns " << full_idx << " -> " << ( it - _m_breakpoints_local_indices.begin() - 1 ) << std::endl;
                 return it - _m_breakpoints_local_indices.begin() - 1;
             }
 
@@ -448,19 +439,28 @@ namespace dipha {
                 // process queries (This is a two step approach)
 
                 // first, we compute which full indices are needed at all
-                std::map< int64_t, int64_t > full_to_sparse_indices_in_boundary;
+                std::map< int64_t, int64_t > full_to_sparse_indices_in_co_boundary;
                 std::vector< int64_t > boundary;
                 for( int source = 0; source < num_processes; source++ ) {
                     for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size(); idx++ ) {
-                        std::cout << "New el_idx (sparse): " << dipha::mpi_utils::get_rank() << " " << queries_buffer[ source ][ idx ] << std::endl;
+		      //std::cout << "New el_idx (sparse): " << dipha::mpi_utils::get_rank() << " " << queries_buffer[ source ][ idx ] << std::endl;
                         int64_t full_idx = get_locally_full_from_sparse_index( queries_buffer[ source ][ idx ] );
                         if( dual ) {
-                            //get_local_coboundary( full_idx, boundary );
+
+			  //std::cout << "YYY: Full Index: " << full_idx << std::endl;
+			  _get_local_coboundary_full_index( full_idx, boundary, true );
+			  //std::cout << "YYY: Result: ";
+			  /*
+			  for(int i=0;i<boundary.size();i++) {
+			    std::cout << boundary[i] << " ";
+			  }
+			  std::cout << std::endl;
+			  */
                         } else {
                             _get_local_boundary_full_index( full_idx, boundary );
                         }
                         for( auto it = boundary.begin(); it != boundary.end(); it++ ) {
-                            full_to_sparse_indices_in_boundary[ *it ] = -1; // dummy entry for now
+                            full_to_sparse_indices_in_co_boundary[ *it ] = -1; // dummy entry for now
                         }
                     }
                 }
@@ -473,19 +473,19 @@ namespace dipha {
 
                 inner_queries_send_buffer.resize( num_processes );
 
-                std::cout << "KEYS " << std::flush;
+                //std::cout << "KEYS " << std::flush;
 
-                for( auto map_it = full_to_sparse_indices_in_boundary.begin();
-                     map_it != full_to_sparse_indices_in_boundary.end();
+                for( auto map_it = full_to_sparse_indices_in_co_boundary.begin();
+                     map_it != full_to_sparse_indices_in_co_boundary.end();
                      map_it++ ) {
                     int64_t key = map_it->first;
-                    std::cout << key << " " << std::flush;
+                    //std::cout << key << " " << std::flush;
                     assert( map_it->second == -1 );
                     int process_for_current = process_for_full_index( key );
-                    std::cout << "To process " << process_for_current << "! " << std::flush;
+                    //std::cout << "To process " << process_for_current << "! " << std::flush;
                     inner_queries_send_buffer[ process_for_current ].push_back( key );
                 }
-                std::cout << std::endl;
+                //std::cout << std::endl;
 
                 std::vector< MPI_Request > queries_requests;
 
@@ -510,10 +510,9 @@ namespace dipha {
                 for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
                     int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
                     for( int64_t query_buf_idx = 0; query_buf_idx < inner_queries_recv_buffer[ source ].size(); query_buf_idx++ ) {
-                        std::cout << mpi_utils::get_rank() << " " << "FROM 2" << std::endl;
-                        inner_queries_recv_buffer[ source ][ query_buf_idx ] = get_locally_sparse_from_full_index( inner_queries_recv_buffer[ source ][ query_buf_idx ] );
+		      inner_queries_recv_buffer[ source ][ query_buf_idx ] = get_locally_sparse_from_full_index( inner_queries_recv_buffer[ source ][ query_buf_idx ] );
                     }
-                    mpi_utils::non_blocking_send_vector( inner_queries_recv_buffer[ process_id ], process_id, mpi_utils::MSG_QUERY_SPARSE_INDICES, queries_requests );
+                    mpi_utils::non_blocking_send_vector( inner_queries_recv_buffer[ source ], source, mpi_utils::MSG_QUERY_SPARSE_INDICES, queries_requests );
                 }
 
                 inner_answers_recv_buffer.resize( num_processes );
@@ -529,7 +528,7 @@ namespace dipha {
                     for( int64_t query_idx = 0; query_idx < inner_queries_send_buffer[ process_id ].size(); query_idx++ ) {
                         int64_t key = inner_queries_send_buffer[ process_id ][ query_idx ];
                         int64_t value = inner_answers_recv_buffer[ process_id ][ query_idx ];
-                        full_to_sparse_indices_in_boundary[ key ] = value;
+			full_to_sparse_indices_in_co_boundary[ key ] = value;
                     }
                 }
 
@@ -542,15 +541,16 @@ namespace dipha {
                     for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size(); idx++ ) {
                         int64_t full_idx = get_locally_full_from_sparse_index( queries_buffer[ source ][ idx ] );
                         if( dual ) {
-                            //get_local_coboundary( full_idx, boundary );
+			  _get_local_coboundary_full_index( full_idx, boundary,true );
                         } else {
                             _get_local_boundary_full_index( full_idx, boundary );
                         }
                         std::vector< int64_t> sparse_idx_boundaries;
                         for( int bd_idx = 0; bd_idx < boundary.size(); bd_idx++ ) {
-                            assert( full_to_sparse_indices_in_boundary.find( boundary[ bd_idx ] ) != full_to_sparse_indices_in_boundary.end() );
-                            assert( full_to_sparse_indices_in_boundary[ boundary[ bd_idx ] ] != -1 );
-                            sparse_idx_boundaries.push_back( full_to_sparse_indices_in_boundary[ boundary[ bd_idx ] ] );
+                            assert( full_to_sparse_indices_in_co_boundary.find( boundary[ bd_idx ] ) != full_to_sparse_indices_in_co_boundary.end() );
+                            assert( full_to_sparse_indices_in_co_boundary[ boundary[ bd_idx ] ] != -1 );
+                            sparse_idx_boundaries.push_back( full_to_sparse_indices_in_co_boundary[ boundary[ bd_idx ] ] );
+			    //std::cout << "add " << boundary[ bd_idx ] << " " << full_to_sparse_indices_in_co_boundary[ boundary[ bd_idx ] ] << std::endl;
                         }
                         buffer[ source ].set( idx, sparse_idx_boundaries.begin(), sparse_idx_boundaries.end() );
                     }
@@ -583,6 +583,7 @@ namespace dipha {
                 MPI_Barrier( MPI_COMM_WORLD );
 
                 // Debug: Report result
+		/*
                 std::cout << mpi_utils::get_rank() << " Queries ";
                 for( int i = 0; i < queries.size(); i++ ) {
                     std::cout << queries[ i ] << " ";
@@ -592,7 +593,7 @@ namespace dipha {
                     std::cout << answers.data[ j ] << " ";
                 }
                 std::cout << std::endl;
-
+		*/
             }
 
             void _get_local_boundary_full_index( int64_t idx, std::vector< int64_t >& boundary ) const
@@ -727,7 +728,7 @@ namespace dipha {
 
                 mpi_utils::file_read_at( file, offset, _m_threshold );
 
-                std::cout << "Threshold is " << _m_threshold << std::endl;
+                //std::cout << "Threshold is " << _m_threshold << std::endl;
 
                 offset += sizeof( double );
 
