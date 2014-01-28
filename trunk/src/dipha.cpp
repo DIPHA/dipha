@@ -61,6 +61,8 @@ void compute( const std::string& input_filename,
 {
     Complex complex;
     DIPHA_MACROS_BENCHMARK( complex.load_binary( input_filename ); );
+    if( dipha::globals::benchmark )
+        dipha::mpi_utils::cout_if_root() << std::endl << "Number of cells in input: " << std::endl << complex.get_num_cells() << std::endl;
     dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
     dipha::data_structures::write_once_column_array reduced_columns;
     dipha::algorithms::compute_reduced_columns( complex, dualize, filtration_to_cell_map, reduced_columns );
@@ -85,6 +87,7 @@ int main( int argc, char** argv )
         dipha::globals::benchmark = true;
 
         dipha::mpi_utils::cout_if_root() << std::endl << "Input filename: " << std::endl << input_filename << std::endl;
+        
         dipha::mpi_utils::cout_if_root() << std::endl << "Number of processes used: " << std::endl << dipha::mpi_utils::get_num_processes() << std::endl;
         dipha::mpi_utils::cout_if_root() << std::endl << "Detailed information for rank 0:" << std::endl;
         dipha::mpi_utils::cout_if_root() << std::setw( 11 ) << "time" << std::setw( 13 ) << "prior mem" << std::setw( 13 ) << "peak mem" << std::setw( 13 ) << "bytes recv" << std::endl;
