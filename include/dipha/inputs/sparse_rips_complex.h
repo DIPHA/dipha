@@ -91,21 +91,21 @@ namespace dipha {
 
             // Note: This currently scales very badly with the number of points
             // (TODO: Sparse list representation?)
-	    // scan_full_column=false means: only look for the coboundaries such that
-	    // the new vertex has the largest index among all indices
+            // scan_full_column=false means: only look for the coboundaries such that
+            // the new vertex has the largest index among all indices
             void _get_local_coboundary_full_index( int64_t full_idx,
-						   std::vector<int64_t>& coboundary,
-						   bool scan_full_column = false ) const
+                                                   std::vector<int64_t>& coboundary,
+                                                   bool scan_full_column = false ) const
             {
 
                 //std::cout << "compute_coboundary for " << full_idx << " " << local_process_idx << std::endl;
 
- 	        coboundary.clear();
+                coboundary.clear();
 
                 std::vector<int64_t> vertex_indices;
                 conversion( full_idx, std::back_inserter( vertex_indices ) );
 
-		int64_t start_idx_for_scan = scan_full_column ? 0 : vertex_indices.front();
+                int64_t start_idx_for_scan = scan_full_column ? 0 : vertex_indices.front();
 
                 int64_t rows_to_check = vertex_indices.size();
 
@@ -126,7 +126,7 @@ namespace dipha {
 
                         int64_t full_idx_of_new_coboundary;
                         conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), coboundary_candidate, full_idx_of_new_coboundary );
-			coboundary.push_back( full_idx_of_new_coboundary );
+                        coboundary.push_back( full_idx_of_new_coboundary );
                     }
 
                 }
@@ -174,9 +174,9 @@ namespace dipha {
                     for( auto full_index_it = full_indices_to_handle_per_dimension[ dim ].begin();
                          full_index_it != full_indices_to_handle_per_dimension[ dim ].end();
                          full_index_it++ ) {
-		      std::vector<int64_t> coboundary;
-		      _get_local_coboundary_full_index( *full_index_it, coboundary, false );
-		      std::copy(coboundary.begin(), coboundary.end(), std::back_inserter(full_index_of_codimension_one_buffer));
+                        std::vector<int64_t> coboundary;
+                        _get_local_coboundary_full_index( *full_index_it, coboundary, false );
+                        std::copy( coboundary.begin(), coboundary.end(), std::back_inserter( full_index_of_codimension_one_buffer ) );
                     }
 
                     std::vector<std::vector<int64_t> > codimension_one_full_indices_send_buffer;
@@ -289,11 +289,11 @@ namespace dipha {
                 // sort the indices
                 std::sort( _m_full_indices_in_range.begin(), _m_full_indices_in_range.end() );
 
-		/*
-                for( int64_t i = 0; i < _m_full_indices_in_range.size(); i++ ) {
-                    std::cout << dipha::mpi_utils::get_rank() << " " << _m_full_indices_in_range[ i ] << std::endl;
-                }
-		*/
+                /*
+                        for( int64_t i = 0; i < _m_full_indices_in_range.size(); i++ ) {
+                        std::cout << dipha::mpi_utils::get_rank() << " " << _m_full_indices_in_range[ i ] << std::endl;
+                        }
+                        */
 
                 // Finally, tell everyone the maximal global index in the range (so that everyone can ask at the right place)
                 int64_t maximal_global_idx = _m_full_indices_in_range.back();
@@ -319,12 +319,12 @@ namespace dipha {
                     assert( breakpoint_from_process.size() == 1 );
                     _m_breakpoints_local_indices.push_back( 1 + breakpoint_from_process[ 0 ] );
                 }
-		/*
-                std::cout << "Process " << dipha::mpi_utils::get_rank() << " has " << _m_full_indices_in_range.size() << " simplices" << std::endl;
-                for( int64_t i = 0; i <= num_processes; i++ ) {
-                    std::cout << dipha::mpi_utils::get_rank() << " breakpoint " << i << " " << _m_breakpoints_local_indices[ i ] << std::endl;
-                }
-		*/
+                /*
+                        std::cout << "Process " << dipha::mpi_utils::get_rank() << " has " << _m_full_indices_in_range.size() << " simplices" << std::endl;
+                        for( int64_t i = 0; i <= num_processes; i++ ) {
+                        std::cout << dipha::mpi_utils::get_rank() << " breakpoint " << i << " " << _m_breakpoints_local_indices[ i ] << std::endl;
+                        }
+                        */
 
 
             }
@@ -357,11 +357,11 @@ namespace dipha {
                 int process_id = dipha::mpi_utils::get_rank();
 
                 int64_t local_begin = dipha::element_distribution::get_local_begin( _m_num_elements, process_id );
-		/*
-                if( sparse_idx >= dipha::element_distribution::get_local_end( _m_num_elements, process_id ) ) {
-                    std::cout << mpi_utils::get_rank() << " " << "Got sparse_idx " << sparse_idx << ", but my range is " << local_begin << ", " << dipha::element_distribution::get_local_end( _m_num_elements, process_id ) << std::endl;
-                }
-		*/
+                /*
+                        if( sparse_idx >= dipha::element_distribution::get_local_end( _m_num_elements, process_id ) ) {
+                        std::cout << mpi_utils::get_rank() << " " << "Got sparse_idx " << sparse_idx << ", but my range is " << local_begin << ", " << dipha::element_distribution::get_local_end( _m_num_elements, process_id ) << std::endl;
+                        }
+                        */
                 assert( sparse_idx >= local_begin );
                 assert( sparse_idx < dipha::element_distribution::get_local_end( _m_num_elements, process_id ) );
 
@@ -443,19 +443,19 @@ namespace dipha {
                 std::vector< int64_t > boundary;
                 for( int source = 0; source < num_processes; source++ ) {
                     for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size(); idx++ ) {
-		      //std::cout << "New el_idx (sparse): " << dipha::mpi_utils::get_rank() << " " << queries_buffer[ source ][ idx ] << std::endl;
+                        //std::cout << "New el_idx (sparse): " << dipha::mpi_utils::get_rank() << " " << queries_buffer[ source ][ idx ] << std::endl;
                         int64_t full_idx = get_locally_full_from_sparse_index( queries_buffer[ source ][ idx ] );
                         if( dual ) {
 
-			  //std::cout << "YYY: Full Index: " << full_idx << std::endl;
-			  _get_local_coboundary_full_index( full_idx, boundary, true );
-			  //std::cout << "YYY: Result: ";
-			  /*
-			  for(int i=0;i<boundary.size();i++) {
-			    std::cout << boundary[i] << " ";
-			  }
-			  std::cout << std::endl;
-			  */
+                            //std::cout << "YYY: Full Index: " << full_idx << std::endl;
+                            _get_local_coboundary_full_index( full_idx, boundary, true );
+                            //std::cout << "YYY: Result: ";
+                            /*
+                            for(int i=0;i<boundary.size();i++) {
+                            std::cout << boundary[i] << " ";
+                            }
+                            std::cout << std::endl;
+                            */
                         } else {
                             _get_local_boundary_full_index( full_idx, boundary );
                         }
@@ -510,7 +510,7 @@ namespace dipha {
                 for( int64_t process_id = 0; process_id < num_processes; process_id++ ) {
                     int64_t source = ( dipha::mpi_utils::get_rank() + process_id ) % num_processes;
                     for( int64_t query_buf_idx = 0; query_buf_idx < inner_queries_recv_buffer[ source ].size(); query_buf_idx++ ) {
-		      inner_queries_recv_buffer[ source ][ query_buf_idx ] = get_locally_sparse_from_full_index( inner_queries_recv_buffer[ source ][ query_buf_idx ] );
+                        inner_queries_recv_buffer[ source ][ query_buf_idx ] = get_locally_sparse_from_full_index( inner_queries_recv_buffer[ source ][ query_buf_idx ] );
                     }
                     mpi_utils::non_blocking_send_vector( inner_queries_recv_buffer[ source ], source, mpi_utils::MSG_QUERY_SPARSE_INDICES, queries_requests );
                 }
@@ -528,7 +528,7 @@ namespace dipha {
                     for( int64_t query_idx = 0; query_idx < inner_queries_send_buffer[ process_id ].size(); query_idx++ ) {
                         int64_t key = inner_queries_send_buffer[ process_id ][ query_idx ];
                         int64_t value = inner_answers_recv_buffer[ process_id ][ query_idx ];
-			full_to_sparse_indices_in_co_boundary[ key ] = value;
+                        full_to_sparse_indices_in_co_boundary[ key ] = value;
                     }
                 }
 
@@ -541,7 +541,7 @@ namespace dipha {
                     for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size(); idx++ ) {
                         int64_t full_idx = get_locally_full_from_sparse_index( queries_buffer[ source ][ idx ] );
                         if( dual ) {
-			  _get_local_coboundary_full_index( full_idx, boundary,true );
+                            _get_local_coboundary_full_index( full_idx, boundary, true );
                         } else {
                             _get_local_boundary_full_index( full_idx, boundary );
                         }
@@ -550,7 +550,7 @@ namespace dipha {
                             assert( full_to_sparse_indices_in_co_boundary.find( boundary[ bd_idx ] ) != full_to_sparse_indices_in_co_boundary.end() );
                             assert( full_to_sparse_indices_in_co_boundary[ boundary[ bd_idx ] ] != -1 );
                             sparse_idx_boundaries.push_back( full_to_sparse_indices_in_co_boundary[ boundary[ bd_idx ] ] );
-			    //std::cout << "add " << boundary[ bd_idx ] << " " << full_to_sparse_indices_in_co_boundary[ boundary[ bd_idx ] ] << std::endl;
+                            //std::cout << "add " << boundary[ bd_idx ] << " " << full_to_sparse_indices_in_co_boundary[ boundary[ bd_idx ] ] << std::endl;
                         }
                         buffer[ source ].set( idx, sparse_idx_boundaries.begin(), sparse_idx_boundaries.end() );
                     }
@@ -583,17 +583,17 @@ namespace dipha {
                 MPI_Barrier( MPI_COMM_WORLD );
 
                 // Debug: Report result
-		/*
-                std::cout << mpi_utils::get_rank() << " Queries ";
-                for( int i = 0; i < queries.size(); i++ ) {
-                    std::cout << queries[ i ] << " ";
-                }
-                std::cout << "Answer array: ";
-                for( int j = 0; j < answers.data.size(); j++ ) {
-                    std::cout << answers.data[ j ] << " ";
-                }
-                std::cout << std::endl;
-		*/
+                /*
+                        std::cout << mpi_utils::get_rank() << " Queries ";
+                        for( int i = 0; i < queries.size(); i++ ) {
+                        std::cout << queries[ i ] << " ";
+                        }
+                        std::cout << "Answer array: ";
+                        for( int j = 0; j < answers.data.size(); j++ ) {
+                        std::cout << answers.data[ j ] << " ";
+                        }
+                        std::cout << std::endl;
+                        */
             }
 
             void _get_local_boundary_full_index( int64_t idx, std::vector< int64_t >& boundary ) const
@@ -886,31 +886,31 @@ namespace dipha {
 }
 
 #ifdef DIPHA_TEST
-    struct ExtrinsicSparseRipsTest {
-        typedef dipha::inputs::sparse_rips_complex complex_type;
-        static std::string get_test_filename( ) { return std::string( "extrinsic_sparse_rips.complex" ); }
-    };
-    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRips, TestPrimalWeightedCellComplex, ExtrinsicSparseRipsTest );
-    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRips, TestDualWeightedCellComplex, ExtrinsicSparseRipsTest );
+struct ExtrinsicSparseRipsTest {
+    typedef dipha::inputs::sparse_rips_complex complex_type;
+    static std::string get_test_filename() { return std::string( "extrinsic_sparse_rips.complex" ); }
+};
+INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRips, TestPrimalWeightedCellComplex, ExtrinsicSparseRipsTest );
+INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRips, TestDualWeightedCellComplex, ExtrinsicSparseRipsTest );
 
-    struct ExtrinsicSparseRipsLargeThresholdTest {
-        typedef dipha::inputs::sparse_rips_complex complex_type;
-        static std::string get_test_filename( ) { return std::string( "extrinsic_sparse_rips_large_threshold.complex" ); }
-    };
-    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRipsLargeThreshold, TestPrimalWeightedCellComplex, ExtrinsicSparseRipsLargeThresholdTest );
-    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRipsLargeThreshold, TestDualWeightedCellComplex, ExtrinsicSparseRipsLargeThresholdTest );
+struct ExtrinsicSparseRipsLargeThresholdTest {
+    typedef dipha::inputs::sparse_rips_complex complex_type;
+    static std::string get_test_filename() { return std::string( "extrinsic_sparse_rips_large_threshold.complex" ); }
+};
+INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRipsLargeThreshold, TestPrimalWeightedCellComplex, ExtrinsicSparseRipsLargeThresholdTest );
+INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRipsLargeThreshold, TestDualWeightedCellComplex, ExtrinsicSparseRipsLargeThresholdTest );
 
-    struct IntrinsicSparseRipsTest {
-        typedef dipha::inputs::sparse_rips_complex complex_type;
-        static std::string get_test_filename( ) { return std::string( "intrinsic_sparse_rips.complex" ); }
-    };
-    INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRips, TestPrimalWeightedCellComplex, IntrinsicSparseRipsTest );
-    INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRips, TestDualWeightedCellComplex, IntrinsicSparseRipsTest );
+struct IntrinsicSparseRipsTest {
+    typedef dipha::inputs::sparse_rips_complex complex_type;
+    static std::string get_test_filename() { return std::string( "intrinsic_sparse_rips.complex" ); }
+};
+INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRips, TestPrimalWeightedCellComplex, IntrinsicSparseRipsTest );
+INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRips, TestDualWeightedCellComplex, IntrinsicSparseRipsTest );
 
-    struct IntrinsicSparseRipsLargeThresholdTest {
-        typedef dipha::inputs::sparse_rips_complex complex_type;
-        static std::string get_test_filename( ) { return std::string( "intrinsic_sparse_rips_large_threshold.complex" ); }
-    };
-    INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRipsLargeThreshold, TestPrimalWeightedCellComplex, IntrinsicSparseRipsLargeThresholdTest );
-    INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRipsLargeThreshold, TestDualWeightedCellComplex, IntrinsicSparseRipsLargeThresholdTest );
+struct IntrinsicSparseRipsLargeThresholdTest {
+    typedef dipha::inputs::sparse_rips_complex complex_type;
+    static std::string get_test_filename() { return std::string( "intrinsic_sparse_rips_large_threshold.complex" ); }
+};
+INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRipsLargeThreshold, TestPrimalWeightedCellComplex, IntrinsicSparseRipsLargeThresholdTest );
+INSTANTIATE_TYPED_TEST_CASE_P( IntrinsicSparseRipsLargeThreshold, TestDualWeightedCellComplex, IntrinsicSparseRipsLargeThresholdTest );
 #endif
