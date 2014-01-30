@@ -113,7 +113,7 @@ if(NOT( functional_test_temp_data STREQUAL "" ) )
 endif()
 
 add_test(NAME unit_tests
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:unit_tests> --gtest_shuffle 
+         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:unit_tests> --gtest_shuffle --gtest_catch_exceptions=0
 						 --gtest_repeat=${NUM_TEST_RUNS} --gtest_break_on_failure --gtest_random_seed=${RANDOM_SEED}
          WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
