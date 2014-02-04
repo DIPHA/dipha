@@ -98,7 +98,7 @@ namespace dipha {
                                                    bool scan_full_column = false ) const
             {
 
-                std::cout << "compute_coboundary for " << full_idx << " " << std::endl;
+	      //std::cout << "compute_coboundary for " << full_idx << " " << std::endl;
 
                 coboundary.clear();
 
