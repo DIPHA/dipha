@@ -98,9 +98,15 @@ namespace dipha {
                                                    bool scan_full_column = false ) const
             {
 
-                //std::cout << "compute_coboundary for " << full_idx << " " << local_process_idx << std::endl;
+                std::cout << "compute_coboundary for " << full_idx << " " << std::endl;
 
                 coboundary.clear();
+
+		int k = _get_local_dim_full_index(full_idx);
+
+		if(k==_m_upper_dim) {
+		  return;
+		}
 
                 std::vector<int64_t> vertex_indices;
                 conversion( full_idx, std::back_inserter( vertex_indices ) );
