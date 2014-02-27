@@ -46,11 +46,27 @@ namespace dipha {
 
                     int64_t maximal_index = col.empty() ? -1 : col.front();
 
-                    // (partially) reduce col using reduced_columns
-                    if( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {
+                    //// std::set column:
+                    //if( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {
+                    //    std::set< int64_t > pivot_col( col.begin( ), col.end( ) );
+                    //    while( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {
+                    //        for( auto it = reduced_columns.begin( maximal_index ); it != reduced_columns.end( maximal_index ); it++ ) {
+                    //            std::pair< std::set< int64_t >::iterator, bool > result = pivot_col.insert( *it );
+                    //            if( result.second == false )
+                    //                pivot_col.erase( result.first );
+                    //        }
+                    //        maximal_index = pivot_col.empty( ) ? -1 : *pivot_col.rbegin( );
+                    //    }
+                    //    
+                    //    col.assign( pivot_col.begin( ), pivot_col.end( ) );
+                    //    max_col_size = col.size( ) > max_col_size ? col.size() : max_col_size;
+                    //    std::make_heap( col.begin( ), col.end( ) );
+                    //}
 
-                        
-                        while( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {
+                    // (partially) reduce col using reduced_columns
+                    if( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {  
+                        while( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {                         
+
                             // add column
                             for( auto it = reduced_columns.begin( maximal_index ) + 1; it != reduced_columns.end( maximal_index ); it++ ) {
                                 col.push_back( *it );
@@ -100,6 +116,8 @@ namespace dipha {
                         else
                             temp_columns.push( index, col );
                     }
+
+                    unreduced_columns.shrink_to_fit();
                 }
 
                 // reverse column stack
