@@ -87,7 +87,7 @@ int main( int argc, char** argv )
         dipha::globals::benchmark = true;
 
         dipha::mpi_utils::cout_if_root() << std::endl << "Input filename: " << std::endl << input_filename << std::endl;
-        
+
         dipha::mpi_utils::cout_if_root() << std::endl << "Number of processes used: " << std::endl << dipha::mpi_utils::get_num_processes() << std::endl;
         dipha::mpi_utils::cout_if_root() << std::endl << "Detailed information for rank 0:" << std::endl;
         dipha::mpi_utils::cout_if_root() << std::setw( 11 ) << "time" << std::setw( 13 ) << "prior mem" << std::setw( 13 ) << "peak mem" << std::setw( 13 ) << "bytes recv" << std::endl;
@@ -101,12 +101,12 @@ int main( int argc, char** argv )
         compute< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, output_filename );
         break;
     case dipha::file_types::EXTRINSIC_FULL_RIPS_COMPLEX:
-      // Go to next case
+        // Go to next case
     case dipha::file_types::INTRINSIC_FULL_RIPS_COMPLEX:
         compute< dipha::inputs::full_rips_complex >( input_filename, dualize, output_filename );
         break;
     case dipha::file_types::EXTRINSIC_SPARSE_RIPS_COMPLEX:
-      // Go to next case
+        // Go to next case
     case dipha::file_types::INTRINSIC_SPARSE_RIPS_COMPLEX:
         compute< dipha::inputs::sparse_rips_complex >( input_filename, dualize, output_filename );
         break;
@@ -117,6 +117,7 @@ int main( int argc, char** argv )
 
     if( benchmark ) {
         MPI_Barrier( MPI_COMM_WORLD );
+        dipha::mpi_utils::cout_if_root( ) << std::setiosflags( std::ios::fixed ) << std::setiosflags( std::ios::showpoint ) << std::setprecision( 1 );
         dipha::mpi_utils::cout_if_root() << std::endl << "Overall running time in seconds: " << std::endl;
         dipha::mpi_utils::cout_if_root() << std::setprecision( 1 ) << MPI_Wtime() - time_at_start << std::endl;
 
@@ -128,6 +129,11 @@ int main( int argc, char** argv )
         MPI_Gather( &peak_mem, 1, MPI_LONG_LONG, peak_mem_per_rank.data(), 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD );
         dipha::mpi_utils::cout_if_root() << std::endl << "Overall peak mem in GB of all ranks: " << std::endl;
         dipha::mpi_utils::cout_if_root() << (double)*std::max_element( peak_mem_per_rank.begin(), peak_mem_per_rank.end() ) / 1024.0 << std::endl;
+
+        dipha::mpi_utils::cout_if_root() << std::endl << "Individual peak mem in GB of per rank: " << std::endl;
+        for( int64_t peak_mem : peak_mem_per_rank ) {
+            dipha::mpi_utils::cout_if_root() << (double)peak_mem / 1024.0 << std::endl;
+        }
 
         std::vector< int64_t > bytes_received_per_rank( dipha::mpi_utils::get_num_processes() );
         MPI_Gather( &dipha::globals::bytes_received, 1, MPI_LONG_LONG, bytes_received_per_rank.data(), 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD );
