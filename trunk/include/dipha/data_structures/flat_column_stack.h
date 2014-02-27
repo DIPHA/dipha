@@ -31,8 +31,14 @@ namespace dipha {
 
         public:
             void swap( flat_column_stack& other ) { std::swap( other.stack_data, stack_data ); }
-            void clear() { stack_data.clear(); };
+            void clear() { stack_data.clear(); }
             bool empty() const { return stack_data.empty(); }
+
+            void shrink_to_fit()
+            {
+                if( stack_data.capacity() > 2 * stack_data.size() )
+                    stack_data.shrink_to_fit();
+            }
 
             void push( int64_t index, const std::vector< int64_t >& col )
             {
