@@ -58,13 +58,14 @@ namespace dipha {
             std::vector< double > birth_value_answers;
             std::vector< double > death_value_answers;
 
-            int64_t global_num_pairs = 0;
-            const int64_t local_num_cells = col_end - col_begin + 1;
-            const int64_t num_chunks = ( local_num_cells + globals::DIPHA_BLOCK_SIZE - 1 ) / globals::DIPHA_BLOCK_SIZE;
+            
+            const int64_t local_num_cells = col_end - col_begin;
+            const int64_t num_chunks = ( local_num_cells + globals::DIPHA_BLOCK_SIZE ) / globals::DIPHA_BLOCK_SIZE;
             for( int64_t chunk_idx = 0; chunk_idx < num_chunks; chunk_idx++ ) {
                 const int64_t chunk_begin = col_begin + chunk_idx * globals::DIPHA_BLOCK_SIZE;
                 const int64_t chunk_end = std::min( col_begin + ( chunk_idx + 1 ) * globals::DIPHA_BLOCK_SIZE, col_end );
 
+                /// get birth cells indices
                 birth_cell_queries.clear();
                 for( int64_t idx = chunk_begin; idx < chunk_end; idx++ ) {
                     if( !reduced_columns.empty( idx ) ) {
@@ -78,6 +79,7 @@ namespace dipha {
                 filtration_to_cell_map.get_global_values( birth_cell_queries, birth_cell_answers );
                 auto iterator_of_birth_cell_answers = birth_cell_answers.cbegin();
 
+                /// get death cells indices
                 death_cell_queries.clear();
                 for( int64_t idx = chunk_begin; idx < chunk_end; idx++ ) {
                     if( !reduced_columns.empty( idx ) ) {
@@ -91,6 +93,7 @@ namespace dipha {
                 filtration_to_cell_map.get_global_values( death_cell_queries, death_cell_answers );
                 auto iterator_of_death_cell_answers = death_cell_answers.cbegin();
 
+                ///  get birth dimension and birth / death values
                 birth_dim_queries.clear();
                 death_value_queries.clear();
                 birth_value_queries.clear();
@@ -102,17 +105,14 @@ namespace dipha {
                         death_value_queries.push_back( *iterator_of_death_cell_answers++ );
                     }
                 }
-
                 complex.get_global_dims( birth_dim_queries, birth_dim_answers );
                 auto iterator_of_birth_dim_answers = birth_dim_answers.cbegin();
-
                 complex.get_global_values( birth_value_queries, birth_value_answers );
                 auto iterator_of_birth_value_answers = birth_value_answers.cbegin();
-
                 complex.get_global_values( death_value_queries, death_value_answers );
                 auto iterator_of_death_value_answers = death_value_answers.cbegin();
 
-                // birth, death pairs
+                /// create diagram entries
                 local_dims_and_pairs.clear();
                 for( int64_t idx = chunk_begin; idx < chunk_end; idx++ ) {
                     if( !reduced_columns.empty( idx ) ) {
@@ -123,37 +123,37 @@ namespace dipha {
                             local_dims_and_pairs.push_back( std::make_pair( birth_dim, std::make_pair( birth_value, death_value ) ) );
                     }
                 }
-
-                int64_t local_num_pairs = local_dims_and_pairs.size();
-                std::vector< int64_t > local_num_pairs_per_rank( mpi_utils::get_num_processes() );
-                MPI_Allgather( &local_num_pairs, 1, MPI_LONG_LONG, local_num_pairs_per_rank.data(), 1, MPI_LONG_LONG, MPI_COMM_WORLD );
-                std::vector< int64_t > cum_sum_local_num_pairs( mpi_utils::get_num_processes() + 1 );
-                cum_sum_local_num_pairs.front() = 0;
-                std::partial_sum( local_num_pairs_per_rank.begin(), local_num_pairs_per_rank.end(), cum_sum_local_num_pairs.begin() + 1 );
-                global_num_pairs += cum_sum_local_num_pairs.back();
-
-                const int64_t entry_size = sizeof( diagram_entry_type );
-                MPI_Offset file_offset = cur_file_size + cum_sum_local_num_pairs[ mpi_utils::get_rank() ] * entry_size;
-
-                // reserve space for pairs
-                cur_file_size = preamble_length + global_num_pairs * entry_size;
-                MPI_File_set_size( file, cur_file_size );
-
-                // now write pairs to file
-                mpi_utils::file_write_at_all_vector( file, file_offset, local_dims_and_pairs );
             }
 
-            // write preamble to file
+            int64_t local_num_pairs = local_dims_and_pairs.size( );
+            std::vector< int64_t > local_num_pairs_per_rank( mpi_utils::get_num_processes( ) );
+            MPI_Allgather( &local_num_pairs, 1, MPI_LONG_LONG, local_num_pairs_per_rank.data( ), 1, MPI_LONG_LONG, MPI_COMM_WORLD );
+            std::vector< int64_t > cum_sum_local_num_pairs( mpi_utils::get_num_processes( ) + 1 );
+            cum_sum_local_num_pairs.front( ) = 0;
+            std::partial_sum( local_num_pairs_per_rank.begin( ), local_num_pairs_per_rank.end( ), cum_sum_local_num_pairs.begin( ) + 1 );
+            int64_t global_num_pairs = cum_sum_local_num_pairs.back( );
+
+            const int64_t entry_size = sizeof( diagram_entry_type );
+            MPI_Offset file_offset = cur_file_size + cum_sum_local_num_pairs[ mpi_utils::get_rank( ) ] * entry_size;
+
+            /// reserve space for pairs
+            cur_file_size = preamble_length + global_num_pairs * entry_size;
+            MPI_File_set_size( file, cur_file_size );
+
+            /// now write pairs to file
+            mpi_utils::file_write_at_all_vector( file, file_offset, local_dims_and_pairs );
+
+            /// write preamble to file
             if( mpi_utils::is_root() ) {
                 mpi_utils::file_write_at( file, 0, file_types::DIPHA );
                 mpi_utils::file_write_at( file, sizeof( int64_t ), file_types::PERSISTENCE_DIAGRAM );
                 mpi_utils::file_write_at( file, 2 * sizeof( int64_t ), global_num_pairs );
             }
 
-            // now sort the pairs to simplify regression tests etc.
+            /// now sort the pairs to simplify regression tests etc.
             MPI_Barrier( MPI_COMM_WORLD );
 
-            // be careful with tiny files: psort needs all processes to have work to do ...
+            /// be careful with tiny files: psort needs all processes to have work to do ...
             if( global_num_pairs < mpi_utils::get_num_processes( ) * mpi_utils::get_num_processes( ) ) {
                 if( mpi_utils::is_root( ) ) {
                     std::vector< diagram_entry_type > global_dims_and_pairs;
