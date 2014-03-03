@@ -31,7 +31,8 @@ namespace dipha {
                                        const data_structures::distributed_vector< int64_t >& filtration_to_cell_map,
                                        const data_structures::write_once_column_array& reduced_columns,
                                        bool dualized = false,
-                                       double persistence_threshold = 0 )
+                                       double persistence_threshold = 0,
+                                       bool without_top_dimension_essentials = true )
         {
             MPI_File file = mpi_utils::file_open_read_write( filename );
 
@@ -57,8 +58,13 @@ namespace dipha {
             std::vector< int64_t > birth_dim_answers;
             std::vector< double > birth_value_answers;
             std::vector< double > death_value_answers;
+            std::vector< std::pair< int64_t, bool > > non_essential_cells;
 
-            
+            data_structures::distributed_vector< bool > is_cell_essential;
+            is_cell_essential.init( global_num_cols );
+            for( int64_t idx = col_begin; idx < col_end; idx++ )
+                is_cell_essential.set_local_value( idx, true );
+
             const int64_t local_num_cells = col_end - col_begin;
             const int64_t num_chunks = ( local_num_cells + globals::DIPHA_BLOCK_SIZE ) / globals::DIPHA_BLOCK_SIZE;
             for( int64_t chunk_idx = 0; chunk_idx < num_chunks; chunk_idx++ ) {
@@ -93,16 +99,20 @@ namespace dipha {
                 filtration_to_cell_map.get_global_values( death_cell_queries, death_cell_answers );
                 auto iterator_of_death_cell_answers = death_cell_answers.cbegin();
 
-                ///  get birth dimension and birth / death values
+                ///  get birth dimension and birth / death values, and gather non_essential_cols
                 birth_dim_queries.clear();
                 death_value_queries.clear();
                 birth_value_queries.clear();
+                non_essential_cells.clear( );
                 for( int64_t idx = chunk_begin; idx < chunk_end; idx++ ) {
                     if( !reduced_columns.empty( idx ) ) {
                         int64_t birth_cell = *iterator_of_birth_cell_answers++;
+                        int64_t death_cell = *iterator_of_death_cell_answers++;
                         birth_dim_queries.push_back( birth_cell );
                         birth_value_queries.push_back( birth_cell );
-                        death_value_queries.push_back( *iterator_of_death_cell_answers++ );
+                        death_value_queries.push_back( death_cell );
+                        non_essential_cells.push_back( std::make_pair( birth_cell, false ) );
+                        non_essential_cells.push_back( std::make_pair( death_cell, false ) );
                     }
                 }
                 complex.get_global_dims( birth_dim_queries, birth_dim_answers );
@@ -112,8 +122,7 @@ namespace dipha {
                 complex.get_global_values( death_value_queries, death_value_answers );
                 auto iterator_of_death_value_answers = death_value_answers.cbegin();
 
-                /// create diagram entries
-                local_dims_and_pairs.clear();
+                /// create local diagram entries
                 for( int64_t idx = chunk_begin; idx < chunk_end; idx++ ) {
                     if( !reduced_columns.empty( idx ) ) {
                         int64_t birth_dim = *iterator_of_birth_dim_answers++;
@@ -123,7 +132,24 @@ namespace dipha {
                             local_dims_and_pairs.push_back( std::make_pair( birth_dim, std::make_pair( birth_value, death_value ) ) );
                     }
                 }
+
+                /// update is_cell_essential
+                is_cell_essential.set_global_values( non_essential_cells );
             }
+
+            /// get maximum value of complex
+            const double max_value = complex.get_max_value();
+
+            /// create essential triples
+            for( int64_t idx = col_begin; idx < col_end; idx++ ) {
+                if( is_cell_essential.get_local_value( idx ) == true 
+                    && ( !without_top_dimension_essentials || complex.get_local_dim( idx ) < complex.get_max_dim( ) ) ) {
+                    int64_t dim = complex.get_local_dim( idx );
+                    int64_t shifted_dim = -dim - 1;
+                    double value = complex.get_local_value( idx );
+                    local_dims_and_pairs.push_back( std::make_pair( shifted_dim, std::make_pair( value, max_value ) ) );
+                }
+            }              
 
             int64_t local_num_pairs = local_dims_and_pairs.size( );
             std::vector< int64_t > local_num_pairs_per_rank( mpi_utils::get_num_processes( ) );

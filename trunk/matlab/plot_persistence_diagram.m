@@ -19,24 +19,25 @@
 
 function plot_persistence_diagram( filename )
     %% load data
-    [dimensions, birth_values, death_values] = load_persistence_diagram( filename );
+    [dims, births, deaths] = load_persistence_diagram( filename );
 
-    %% select a subset of points in the diagram based on lifetime
-    persistence_threshold = 0.0;
-    selection = ( death_values - birth_values ) > persistence_threshold;
+    %% classify points in file     
+    essentials = (dims < 0);
+    non_essentials = ~essentials;
 
     %% draw points
     colormap( jet( 13 ) );
-    scatter( birth_values( selection ), death_values( selection ), 50, dimensions( selection ), 'filled', 'MarkerEdgeColor','k' );
-
+    marker_size = 50;
+    scatter( births( essentials ), deaths( essentials ), marker_size, -dims( essentials ) - 1, ...
+             'filled', 'MarkerEdgeColor','k', 'Marker', 's' );
+    hold on
+    scatter( births( non_essentials ), deaths( non_essentials ), marker_size, dims( non_essentials ), ...
+             'filled', 'MarkerEdgeColor','k', 'Marker', 'o' );
+    hold off
+    
     %% draw diagonal
-    if( all( ~selection ) )
-        min_value = -1;
-        max_value = 1;
-    else
-        min_value = min( birth_values( selection ) );
-        max_value = max( death_values( selection ) );
-    end
+    min_value = min( births );
+    max_value = max( deaths );
     line( [min_value, max_value], [min_value, max_value], 'Color','k' );
 
     %% restrict axis
