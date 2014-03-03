@@ -113,6 +113,11 @@ namespace dipha {
                 derived()._get_global_coboundaries( queries, answers );
             }
 
+            double get_max_value() const
+            {
+                return derived()._get_max_value();
+            }
+
             // default implementations
         private:
             void _get_global_values( const std::vector< int64_t >& queries,
@@ -160,6 +165,20 @@ namespace dipha {
                                            data_structures::write_once_array_of_arrays< int64_t >& answers ) const
             {
                 _get_global_co_boundaries( queries, answers, true );
+            }
+
+            double _get_max_value() const
+            {
+                const int64_t local_begin = element_distribution::get_local_begin( get_num_cells( ) );
+                const int64_t local_end = element_distribution::get_local_end( get_num_cells( ) );
+                double local_max_value = std::numeric_limits< double >::lowest( );
+                for( int64_t idx = local_begin; idx < local_end; idx++ ) {
+                    double value = get_local_value( idx );
+                    local_max_value = value > local_max_value ? value : local_max_value;
+                }
+                std::vector< double > max_value_per_rank( mpi_utils::get_num_processes( ) );
+                MPI_Allgather( &local_max_value, 1, MPI_DOUBLE, max_value_per_rank.data( ), 1, MPI_DOUBLE, MPI_COMM_WORLD );
+                return *std::max_element( max_value_per_rank.begin( ), max_value_per_rank.end( ) );
             }
 
             // internal helper functions
