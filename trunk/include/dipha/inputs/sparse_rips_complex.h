@@ -54,7 +54,9 @@ namespace dipha {
 
             // Loads the complete_rips_complex from given file in binary format -- all symbols are 64 bit wide
             // Dispatches loading to subroutines according to file format
-            void _load_binary( MPI_File file )
+            void _load_binary( MPI_File file, 
+                               int64_t upper_dim = std::numeric_limits< int64_t >::max(),
+                               double upper_value = std::numeric_limits< double >::max( ) )
             {
                 std::vector< int64_t > preamble;
                 mpi_utils::file_read_at_vector( file, 0, 2, preamble );

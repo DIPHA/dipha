@@ -54,12 +54,14 @@ namespace dipha {
                 return derived()._get_local_value( idx );
             }
 
-            // loads the object from file
-            void load_binary( const std::string& filename )
+            // loads the object from file -- upper_dim and upper_value are hints
+            void load_binary( const std::string& filename,
+                              int64_t upper_dim = std::numeric_limits< int64_t >::max(), 
+                              double upper_value = std::numeric_limits< double >::max() )
             {
                 file_types::assert_dipha_type( filename );
                 MPI_File file = mpi_utils::file_open_read_only( filename );
-                derived()._load_binary( file );
+                derived( )._load_binary( file, upper_dim, upper_value );
                 MPI_File_close( &file );
             }
 

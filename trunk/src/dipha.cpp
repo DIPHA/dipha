@@ -74,7 +74,7 @@ template< typename Complex >
 void compute( const std::string& input_filename, bool dualize, int64_t upper_dim, double upper_value, const std::string& output_filename )
 {
     Complex complex;
-    DIPHA_MACROS_BENCHMARK( complex.load_binary( input_filename ); );
+    DIPHA_MACROS_BENCHMARK( complex.load_binary( input_filename, upper_dim, upper_value ); );
     if( dipha::globals::benchmark )
         dipha::mpi_utils::cout_if_root() << std::endl << "Number of cells in input: " << std::endl << complex.get_num_cells() << std::endl;
     dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
