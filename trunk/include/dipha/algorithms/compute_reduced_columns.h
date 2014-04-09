@@ -26,6 +26,8 @@ namespace dipha {
         template< typename Complex >
         void compute_reduced_columns( const inputs::abstract_weighted_cell_complex< Complex >& complex,
                                       bool dualize,
+                                      int64_t upper_dim,
+                                      double upper_value,
                                       data_structures::distributed_vector< int64_t >& filtration_to_cell_map,
                                       data_structures::write_once_column_array& reduced_columns )
         {
@@ -34,8 +36,9 @@ namespace dipha {
             DIPHA_MACROS_BENCHMARK( get_cell_to_filtration_map( complex.get_num_cells(), filtration_to_cell_map, cell_to_filtration_map ); );
 
             reduced_columns.init( complex.get_num_cells() );
-            for( int64_t idx = 0; idx < complex.get_max_dim(); idx++ ) {
-                int64_t cur_dim = dualize ? idx : complex.get_max_dim() - idx;
+            const int64_t max_dim = std::min( upper_dim, complex.get_max_dim( ) );
+            for( int64_t idx = 0; idx < max_dim; idx++ ) {
+                int64_t cur_dim = dualize ? idx : max_dim - idx;
                 data_structures::flat_column_stack unreduced_columns;
                 DIPHA_MACROS_BENCHMARK( generate_unreduced_columns( complex, filtration_to_cell_map, cell_to_filtration_map, cur_dim, dualize, unreduced_columns ); );
                 DIPHA_MACROS_BENCHMARK( reduction_kernel( complex.get_num_cells(), unreduced_columns, reduced_columns ); );
