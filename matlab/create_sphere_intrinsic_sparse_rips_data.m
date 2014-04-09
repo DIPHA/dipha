@@ -17,7 +17,7 @@
 %  You should have received a copy of the GNU Lesser General Public License
 %  along with DIPHA.  If not, see <http://www.gnu.org/licenses/>.
 
-function create_sphere_intrinsic_sparse_rips_data( num_points, dimension, threshold )
+function filename = create_sphere_intrinsic_sparse_rips_data( num_points, dimension, threshold )
     %% create filename based on parameters
     filename = ['sphere_' num2str( dimension ) '_' num2str( num_points ) '_' num2str( threshold ) '_intrinsic.complex'];
 
