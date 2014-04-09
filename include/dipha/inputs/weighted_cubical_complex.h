@@ -130,13 +130,13 @@ namespace dipha {
             {
                 // read preamble
                 std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_all_vector( file, 0, 4, preamble );
+                mpi_utils::file_read_at_vector( file, 0, 4, preamble );
 
                 int64_t global_num_vertices = preamble[ 2 ];
                 int64_t max_dim = preamble[ 3 ];
 
                 MPI_Offset lattice_resolution_offset = preamble.size() * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( file, lattice_resolution_offset, max_dim, lattice_resolution );
+                mpi_utils::file_read_at_vector( file, lattice_resolution_offset, max_dim, lattice_resolution );
 
                 cubical_complex_resolution.resize( lattice_resolution.size( ) );
                 for( int64_t cur_dim = 0; cur_dim < get_max_dim( ); cur_dim++ )
@@ -177,11 +177,21 @@ namespace dipha {
 
                 int64_t local_num_vertices = vertex_values_end - vertex_values_begin;
                 MPI_Offset vertex_values_offset = ( preamble.size() + max_dim + vertex_values_begin ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( file, vertex_values_offset, local_num_vertices, vertex_values );
+                mpi_utils::file_read_at_vector( file, vertex_values_offset, local_num_vertices, vertex_values );
             }
 
             // overide default implemantations in abstract_weighted_cell_complex to improve performance
         protected:
+            double _get_max_value( ) const
+            {
+                const int64_t local_begin = element_distribution::get_local_begin( get_num_cells( ) );
+                const int64_t local_end = element_distribution::get_local_end( get_num_cells( ) );
+                double local_max_value = *std::max_element( vertex_values.begin( ), vertex_values.end( ) );
+                std::vector< double > max_value_per_rank( mpi_utils::get_num_processes( ) );
+                MPI_Allgather( &local_max_value, 1, MPI_DOUBLE, max_value_per_rank.data( ), 1, MPI_DOUBLE, MPI_COMM_WORLD );
+                return *std::max_element( max_value_per_rank.begin( ), max_value_per_rank.end( ) );
+            }
+
             void _get_global_dims( const std::vector< int64_t >& queries,
                                    std::vector< int64_t >& answers ) const
             {

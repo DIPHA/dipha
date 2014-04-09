@@ -65,7 +65,7 @@ namespace dipha {
             {
                 // read preamble
                 std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_all_vector( file, 0, 5, preamble );
+                mpi_utils::file_read_at_vector( file, 0, 5, preamble );
                 int64_t dipha_identifier = preamble[ 0 ];
                 int64_t file_type = preamble[ 1 ];
                 my_boundary_type = (boundary_type)preamble[ 2 ];
@@ -77,21 +77,21 @@ namespace dipha {
 
                 // read dimension data
                 MPI_Offset dimensions_begin = ( preamble.size() + local_begin ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( file, dimensions_begin, num_local_cells, dims );
+                mpi_utils::file_read_at_vector( file, dimensions_begin, num_local_cells, dims );
 
                 // read values data
                 MPI_Offset values_begin = ( preamble.size() + global_num_cells + local_begin ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( file, values_begin, num_local_cells, values );
+                mpi_utils::file_read_at_vector( file, values_begin, num_local_cells, values );
 
                 // read offsets data
                 MPI_Offset offsets_begin = ( preamble.size() + 2 * global_num_cells + local_begin ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( file, offsets_begin, num_local_cells + 1, offsets );
+                mpi_utils::file_read_at_vector( file, offsets_begin, num_local_cells + 1, offsets );
 
                 // read entries data
                 int64_t entries_start = offsets.front();
                 int64_t local_num_entries = offsets.back() - entries_start;
                 MPI_Offset entries_begin = ( preamble.size() + 3 * global_num_cells + 1 + entries_start ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( file, entries_begin, local_num_entries, entries );
+                mpi_utils::file_read_at_vector( file, entries_begin, local_num_entries, entries );
             }
 
             // internal helper functions

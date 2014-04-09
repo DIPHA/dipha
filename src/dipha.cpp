@@ -19,7 +19,7 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <dipha/includes.h>
 
-void print_help()
+void print_help_and_exit()
 {
     std::cerr << "Usage: " << "dipha " << "[options] input_filename output_filename" << std::endl;
     std::cerr << std::endl;
@@ -28,15 +28,10 @@ void print_help()
     std::cerr << "--help    --  prints this screen" << std::endl;
     std::cerr << "--dual    --  use dualization" << std::endl;
     std::cerr << "--benchmark --  prints timing info" << std::endl;
-}
-
-void print_help_and_exit()
-{
-    print_help();
     MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
 }
 
-void parse_command_line( int argc, char** argv, bool& benchmark, bool& dualize, std::string& input_filename, std::string& output_filename )
+void parse_command_line( int argc, char** argv, bool& benchmark, bool& dualize, int64_t& upper_dim, double& upper_value, std::string& input_filename, std::string& output_filename )
 {
 
     if( argc < 3 )
@@ -47,17 +42,36 @@ void parse_command_line( int argc, char** argv, bool& benchmark, bool& dualize, 
 
     for( int idx = 1; idx < argc - 2; idx++ ) {
         const std::string option = argv[ idx ];
-        if( option == "--benchmark" ) benchmark = true;
-        else if( option == "--help" ) print_help_and_exit();
-        else if( option == "--dual" ) dualize = true;
-        else print_help_and_exit();
+        if( option == "--benchmark" ) {
+            benchmark = true;
+        } else if( option == "--help" ) {
+            print_help_and_exit();
+        } else if( option == "--dual" ) {
+            dualize = true;
+        } else if( option == "--upper_dim" ) {
+            idx++;
+            if( idx >= argc - 2 )
+                print_help_and_exit();
+            std::string parameter = std::string( argv[ idx ] );
+            size_t pos_last_digit;
+            upper_dim = std::stoll( parameter, &pos_last_digit );
+            if( pos_last_digit != parameter.size() )
+                print_help_and_exit();
+        } else if( option == "--upper_value" ) {
+            idx++;
+            if( idx >= argc - 2 )
+                print_help_and_exit( );
+            std::string parameter = std::string( argv[ idx ] );
+            size_t pos_last_digit;
+            upper_value = std::stod( parameter, &pos_last_digit );
+            if( pos_last_digit != parameter.size( ) )
+                print_help_and_exit( );
+        } else print_help_and_exit();
     }
 }
 
 template< typename Complex >
-void compute( const std::string& input_filename,
-              bool dualize,
-              const std::string& output_filename )
+void compute( const std::string& input_filename, bool dualize, int64_t upper_dim, double upper_value, const std::string& output_filename )
 {
     Complex complex;
     DIPHA_MACROS_BENCHMARK( complex.load_binary( input_filename ); );
@@ -65,8 +79,8 @@ void compute( const std::string& input_filename,
         dipha::mpi_utils::cout_if_root() << std::endl << "Number of cells in input: " << std::endl << complex.get_num_cells() << std::endl;
     dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
     dipha::data_structures::write_once_column_array reduced_columns;
-    dipha::algorithms::compute_reduced_columns( complex, dualize, filtration_to_cell_map, reduced_columns );
-    DIPHA_MACROS_BENCHMARK( dipha::outputs::save_persistence_diagram( output_filename, complex, filtration_to_cell_map, reduced_columns, dualize ); );
+    dipha::algorithms::compute_reduced_columns( complex, dualize, upper_dim, upper_value, filtration_to_cell_map, reduced_columns );
+    DIPHA_MACROS_BENCHMARK( dipha::outputs::save_persistence_diagram( output_filename, complex, filtration_to_cell_map, reduced_columns, dualize, upper_dim, upper_value ); );
 }
 
 int main( int argc, char** argv )
@@ -81,7 +95,9 @@ int main( int argc, char** argv )
     std::string output_filename; // name of file that will contain the persistence diagram
     bool benchmark = false; // print timings / info
     bool dualize = false; // primal / dual computation toggle
-    parse_command_line( argc, argv, benchmark, dualize, input_filename, output_filename );
+    int64_t upper_dim = std::numeric_limits< int64_t >::max();
+    double upper_value = std::numeric_limits< double >::max();
+    parse_command_line( argc, argv, benchmark, dualize, upper_dim, upper_value, input_filename, output_filename );
 
     if( benchmark ) {
         dipha::globals::benchmark = true;
@@ -95,20 +111,20 @@ int main( int argc, char** argv )
 
     switch( dipha::file_types::get_file_type( input_filename ) ) {
     case dipha::file_types::WEIGHTED_CUBICAL_COMPLEX:
-        compute< dipha::inputs::weighted_cubical_complex >( input_filename, dualize, output_filename );
+        compute< dipha::inputs::weighted_cubical_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
     case dipha::file_types::WEIGHTED_EXPLICIT_COMPLEX:
-        compute< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, output_filename );
+        compute< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
     case dipha::file_types::EXTRINSIC_FULL_RIPS_COMPLEX:
         // Go to next case
     case dipha::file_types::INTRINSIC_FULL_RIPS_COMPLEX:
-        compute< dipha::inputs::full_rips_complex >( input_filename, dualize, output_filename );
+        compute< dipha::inputs::full_rips_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
     case dipha::file_types::EXTRINSIC_SPARSE_RIPS_COMPLEX:
         // Go to next case
     case dipha::file_types::INTRINSIC_SPARSE_RIPS_COMPLEX:
-        compute< dipha::inputs::sparse_rips_complex >( input_filename, dualize, output_filename );
+        compute< dipha::inputs::sparse_rips_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
     default:
         dipha::mpi_utils::error_printer_if_root() << "Unknown complex type in DIPHA file" << input_filename << std::endl;

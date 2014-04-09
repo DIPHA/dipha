@@ -57,7 +57,7 @@ namespace dipha {
             void _load_binary( MPI_File file )
             {
                 std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_all_vector( file, 0, 2, preamble );
+                mpi_utils::file_read_at_vector( file, 0, 2, preamble );
                 int64_t type = preamble[ 1 ];
 
                 if( type == dipha::file_types::EXTRINSIC_SPARSE_RIPS_COMPLEX ) {
@@ -678,7 +678,7 @@ namespace dipha {
 
                 // read preamble
                 std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_all_vector( file, 0, 5, preamble );
+                mpi_utils::file_read_at_vector( file, 0, 5, preamble );
 
                 _m_no_points = preamble[ 2 ];
                 int64_t point_dim = preamble[ 3 ];
@@ -692,7 +692,7 @@ namespace dipha {
 
                 std::vector< double > point_coordinates;
 
-                mpi_utils::file_read_at_all_vector( file, offset, _m_no_points*point_dim, point_coordinates );
+                mpi_utils::file_read_at_vector( file, offset, _m_no_points*point_dim, point_coordinates );
 
                 _m_distance_matrix.resize( _m_no_points );
 
@@ -729,7 +729,7 @@ namespace dipha {
 
                 // read preamble
                 std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_all_vector( file, 0, 4, preamble );
+                mpi_utils::file_read_at_vector( file, 0, 4, preamble );
 
                 _m_no_points = preamble[ 2 ];
                 _m_upper_dim = preamble[ 3 ];
@@ -745,7 +745,7 @@ namespace dipha {
                 int64_t matrix_size = _m_no_points*_m_no_points;
 
                 std::vector< double > distances;
-                mpi_utils::file_read_at_all_vector( file, offset, matrix_size, distances );
+                mpi_utils::file_read_at_vector( file, offset, matrix_size, distances );
 
 
                 _m_distance_matrix.resize( _m_no_points );

@@ -128,22 +128,6 @@ namespace dipha {
         }
 
         template< typename T >
-        void file_read_at_all_vector( const MPI_File& file,
-                                      const MPI_Offset& offset,
-                                      int64_t size,
-                                      std::vector< T >& content )
-        {
-            content.resize( size );
-            int chunk_size = globals::MPI_BLOCK_SIZE / sizeof( T );
-            int64_t num_chunks = content.size() / chunk_size + 1;
-            for( int64_t cur_chunk = 0; cur_chunk < num_chunks; cur_chunk++ ) {
-                int bytes_to_read = ( cur_chunk < num_chunks - 1 ) ? chunk_size * sizeof( T ) : ( size % chunk_size ) * sizeof( T );
-                MPI_Offset cur_offset = offset + cur_chunk * chunk_size * sizeof( T );
-                MPI_File_read_at_all( file, cur_offset, content.data() + cur_chunk * chunk_size, bytes_to_read, MPI_BYTE, MPI_STATUS_IGNORE );
-            }
-        }
-
-        template< typename T >
         void file_write_at_vector( const MPI_File& file,
                                    const MPI_Offset& offset,
                                    const std::vector< T >& content )
@@ -155,21 +139,6 @@ namespace dipha {
                 int bytes_to_write = ( cur_chunk < num_chunks - 1 ) ? chunk_size * sizeof( T ) : ( content.size() % chunk_size ) * sizeof( T );
                 MPI_Offset cur_offset = offset + cur_chunk * chunk_size * sizeof( T );
                 MPI_File_write_at( file, cur_offset, non_const_content.data() + cur_chunk * chunk_size, bytes_to_write, MPI_BYTE, MPI_STATUS_IGNORE );
-            }
-        }
-
-        template< typename T >
-        void file_write_at_all_vector( const MPI_File& file,
-                                       const MPI_Offset& offset,
-                                       const std::vector< T >& content )
-        {
-            std::vector< T >& non_const_content = const_cast<std::vector< T >&>( content );
-            int chunk_size = globals::MPI_BLOCK_SIZE / sizeof( T );
-            int64_t num_chunks = content.size() / chunk_size + 1;
-            for( int64_t cur_chunk = 0; cur_chunk < num_chunks; cur_chunk++ ) {
-                int bytes_to_write = ( cur_chunk < num_chunks - 1 ) ? chunk_size * sizeof( T ) : ( content.size() % chunk_size ) * sizeof( T );
-                MPI_Offset cur_offset = offset + cur_chunk * chunk_size * sizeof( T );
-                MPI_File_write_at_all( file, cur_offset, non_const_content.data() + cur_chunk * chunk_size, bytes_to_write, MPI_BYTE, MPI_STATUS_IGNORE );
             }
         }
 

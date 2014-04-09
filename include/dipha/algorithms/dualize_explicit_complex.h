@@ -46,7 +46,7 @@ namespace dipha {
                 MPI_File_get_size( input_file, &file_size );
 
                 // read preamble
-                mpi_utils::file_read_at_all_vector( input_file, 0, 5, preamble );
+                mpi_utils::file_read_at_vector( input_file, 0, 5, preamble );
 
                 const int64_t global_num_cells = preamble[ 3 ];
                 const int64_t local_begin = element_distribution::get_local_begin( global_num_cells );
@@ -55,15 +55,15 @@ namespace dipha {
 
                 // read dimension data
                 MPI_Offset dimensions_begin = ( preamble.size() + local_begin ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( input_file, dimensions_begin, num_local_cells, dims );
+                mpi_utils::file_read_at_vector( input_file, dimensions_begin, num_local_cells, dims );
 
                 // read values data
                 MPI_Offset values_begin = ( preamble.size() + global_num_cells + local_begin ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( input_file, values_begin, num_local_cells, values );
+                mpi_utils::file_read_at_vector( input_file, values_begin, num_local_cells, values );
 
                 // read offsets data
                 MPI_Offset offsets_begin = ( preamble.size() + 2 * global_num_cells + local_begin ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( input_file, offsets_begin, num_local_cells + 1, offsets );
+                mpi_utils::file_read_at_vector( input_file, offsets_begin, num_local_cells + 1, offsets );
 
                 // read global_num_entries
                 MPI_Offset num_entries_begin = ( preamble.size() + 3 * global_num_cells ) * sizeof( int64_t );
@@ -73,7 +73,7 @@ namespace dipha {
                 int64_t entries_start = offsets.front();
                 int64_t num_entries = offsets.back() - entries_start;
                 MPI_Offset entries_begin = ( preamble.size() + 3 * global_num_cells + 1 + entries_start ) * sizeof( int64_t );
-                mpi_utils::file_read_at_all_vector( input_file, entries_begin, num_entries, entries );
+                mpi_utils::file_read_at_vector( input_file, entries_begin, num_entries, entries );
 
                 MPI_File_close( &input_file );
             }
@@ -169,13 +169,13 @@ namespace dipha {
             const int64_t local_end = element_distribution::get_local_end( global_num_cells );
 
             MPI_Offset dimensions_begin = ( preamble.size() + local_begin ) * sizeof( int64_t );
-            mpi_utils::file_write_at_all_vector( output_file, dimensions_begin, dims );
+            mpi_utils::file_write_at_vector( output_file, dimensions_begin, dims );
 
             MPI_Offset values_begin = ( preamble.size() + global_num_cells + local_begin ) * sizeof( int64_t );
-            mpi_utils::file_write_at_all_vector( output_file, values_begin, values );
+            mpi_utils::file_write_at_vector( output_file, values_begin, values );
 
             MPI_Offset offsets_begin = ( preamble.size() + 2 * global_num_cells + local_begin ) * sizeof( int64_t );
-            mpi_utils::file_write_at_all_vector( output_file, offsets_begin, dual_offsets );
+            mpi_utils::file_write_at_vector( output_file, offsets_begin, dual_offsets );
 
             MPI_Offset num_entries_begin = ( preamble.size() + 3 * global_num_cells ) * sizeof( int64_t );
             if( mpi_utils::is_root() )
@@ -183,7 +183,7 @@ namespace dipha {
 
             int64_t entries_start = dual_offsets.front();
             MPI_Offset entries_begin = ( preamble.size() + 3 * global_num_cells + 1 + entries_start ) * sizeof( int64_t );
-            mpi_utils::file_write_at_all_vector( output_file, entries_begin, dual_entries );
+            mpi_utils::file_write_at_vector( output_file, entries_begin, dual_entries );
 
             MPI_File_close( &output_file );
 

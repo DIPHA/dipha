@@ -31,7 +31,8 @@ namespace dipha {
                                        const data_structures::distributed_vector< int64_t >& filtration_to_cell_map,
                                        const data_structures::write_once_column_array& reduced_columns,
                                        bool dualized = false,
-                                       double persistence_threshold = 0,
+                                       int64_t upper_dim = std::numeric_limits< int64_t >::max(),
+                                       double upper_value = std::numeric_limits< double >::max(),
                                        bool without_top_dimension_essentials = true )
         {
             MPI_File file = mpi_utils::file_open_read_write( filename );
@@ -59,6 +60,10 @@ namespace dipha {
             std::vector< double > birth_value_answers;
             std::vector< double > death_value_answers;
             std::vector< std::pair< int64_t, bool > > non_essential_cells;
+
+            /// get maximum value of complex
+            const double max_value = std::min( complex.get_max_value( ), upper_value );
+            const int64_t max_dim = std::min( complex.get_max_dim( ), upper_dim );
 
             data_structures::distributed_vector< bool > is_cell_essential;
             is_cell_essential.init( global_num_cols );
@@ -128,8 +133,14 @@ namespace dipha {
                         int64_t birth_dim = *iterator_of_birth_dim_answers++;
                         double birth_value = *iterator_of_birth_value_answers++;
                         double death_value = *iterator_of_death_value_answers++;
-                        if( death_value - birth_value > persistence_threshold )
-                            local_dims_and_pairs.push_back( std::make_pair( birth_dim, std::make_pair( birth_value, death_value ) ) );
+                        if( death_value > birth_value ) {
+                            if( death_value <= upper_value ) {
+                                local_dims_and_pairs.push_back( std::make_pair( birth_dim, std::make_pair( birth_value, death_value ) ) );
+                            } else {
+                                int64_t shifted_dim = -birth_dim - 1;
+                                local_dims_and_pairs.push_back( std::make_pair( shifted_dim, std::make_pair( birth_value, max_value ) ) );
+                            }
+                        }
                     }
                 }
 
@@ -137,19 +148,18 @@ namespace dipha {
                 is_cell_essential.set_global_values( non_essential_cells );
             }
 
-            /// get maximum value of complex
-            const double max_value = complex.get_max_value();
-
             /// create essential triples
             for( int64_t idx = col_begin; idx < col_end; idx++ ) {
-                if( is_cell_essential.get_local_value( idx ) == true 
-                    && ( !without_top_dimension_essentials || complex.get_local_dim( idx ) < complex.get_max_dim( ) ) ) {
+                if( is_cell_essential.get_local_value( idx ) == true ) {
                     int64_t dim = complex.get_local_dim( idx );
-                    int64_t shifted_dim = -dim - 1;
-                    double value = complex.get_local_value( idx );
-                    local_dims_and_pairs.push_back( std::make_pair( shifted_dim, std::make_pair( value, max_value ) ) );
+                    if( dim <= max_dim && ( !without_top_dimension_essentials || dim < max_dim ) ) {
+                        int64_t shifted_dim = -dim - 1;
+                        double value = complex.get_local_value( idx );
+                        if( value <= upper_value )
+                            local_dims_and_pairs.push_back( std::make_pair( shifted_dim, std::make_pair( value, max_value ) ) );
+                    }
                 }
-            }              
+            }
 
             int64_t local_num_pairs = local_dims_and_pairs.size( );
             std::vector< int64_t > local_num_pairs_per_rank( mpi_utils::get_num_processes( ) );
@@ -167,7 +177,7 @@ namespace dipha {
             MPI_File_set_size( file, cur_file_size );
 
             /// now write pairs to file
-            mpi_utils::file_write_at_all_vector( file, file_offset, local_dims_and_pairs );
+            mpi_utils::file_write_at_vector( file, file_offset, local_dims_and_pairs );
 
             /// write preamble to file
             if( mpi_utils::is_root() ) {
@@ -195,7 +205,7 @@ namespace dipha {
                 std::vector< diagram_entry_type > local_dims_and_pairs;
 
                 MPI_Offset offset = sizeof(int64_t)* 3 + local_begin * sizeof( diagram_entry_type );
-                mpi_utils::file_read_at_all_vector( file, offset, local_num_pairs, local_dims_and_pairs );
+                mpi_utils::file_read_at_vector( file, offset, local_num_pairs, local_dims_and_pairs );
 
                 // psort unfortunately uses long for the size. This will cause problems on Win64 for large data
                 std::vector< long > cell_distribution;
@@ -206,7 +216,7 @@ namespace dipha {
 
                 // need to make sure that above read has completeted before we overwrite
                 MPI_Barrier( MPI_COMM_WORLD );
-                mpi_utils::file_write_at_all_vector( file, offset, local_dims_and_pairs );
+                mpi_utils::file_write_at_vector( file, offset, local_dims_and_pairs );
             }
 
             MPI_File_close( &file );
