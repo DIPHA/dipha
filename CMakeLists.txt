@@ -169,7 +169,7 @@ add_test(NAME compare_dual_explicit
 set_tests_properties(compare_dual_explicit PROPERTIES DEPENDS create_dual_explicit)
 
 add_test(NAME create_primal_intrinsic_full_rips
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> intrinsic_full_rips.complex primal_intrinsic_full_rips.DIPHA_TEST
+         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --upper_dim 2 intrinsic_full_rips.complex primal_intrinsic_full_rips.DIPHA_TEST
          WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_primal_intrinsic_full_rips
@@ -179,7 +179,7 @@ add_test(NAME compare_primal_intrinsic_full_rips
 set_tests_properties(compare_primal_intrinsic_full_rips PROPERTIES DEPENDS create_primal_intrinsic_full_rips)           
 
 add_test(NAME create_dual_intrinsic_full_rips
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual intrinsic_full_rips.complex dual_intrinsic_full_rips.DIPHA_TEST
+         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual --upper_dim 2 intrinsic_full_rips.complex dual_intrinsic_full_rips.DIPHA_TEST
          WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 add_test(NAME compare_dual_intrinsic_full_rips

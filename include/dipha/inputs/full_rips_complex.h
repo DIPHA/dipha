@@ -45,16 +45,40 @@ namespace dipha {
         protected:
 
             // Loads the complete_rips_complex from given file in binary format -- all symbols are 64 bit wide
-            // Dispatches loading to subroutines according to file format
-            void _load_binary( MPI_File file )
+            // Format: magic_number % file_type % num_points % max_dim of complex % values of distance matrix
+            void _load_binary( MPI_File file,
+                               int64_t upper_dim = std::numeric_limits< int64_t >::max( ),
+                               double upper_value = std::numeric_limits< double >::max( ) )
             {
+                // read preamble
                 std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_vector( file, 0, 2, preamble );
-                int64_t type = preamble[ 1 ];
+                mpi_utils::file_read_at_vector( file, 0, 4, preamble );
+
+                _m_no_points = preamble[ 2 ];
+
+                if( upper_dim == std::numeric_limits< int64_t >::max() ) {
+                    mpi_utils::error_printer_if_root( ) << "No upper_dim specified for distance_matrix data!";
+                    MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
+                } else {
+                    _m_upper_dim = upper_dim;
+                }
+
+              //  _m_upper_dim = preamble[ 3 ];
+
+                int64_t matrix_size = _m_no_points*_m_no_points;
+
+                std::vector< double > distances;
+                MPI_Offset point_coordinate_offset = preamble.size( ) * sizeof( int64_t );
+                mpi_utils::file_read_at_vector( file, point_coordinate_offset, matrix_size, distances );
 
 
-                if( type == dipha::file_types::INTRINSIC_FULL_RIPS_COMPLEX ) {
-                    _load_binary_from_distance_matrix( file );
+                _m_distance_matrix.resize( _m_no_points );
+                for( int64_t i = 0; i < _m_no_points; i++ ) {
+                    _m_distance_matrix[ i ].resize( _m_no_points );
+                }
+
+                for( int64_t i = 0; i < matrix_size; i++ ) {
+                    _m_distance_matrix[ i / _m_no_points ][ i%_m_no_points ] = distances[ i ];
                 }
 
                 _precompute_binomials();
@@ -219,38 +243,6 @@ namespace dipha {
 
 
         protected:
-
-            // Loads the complete_rips_complex from given file in binary format -- all symbols are 64 bit wide
-            // Format: magic_number % file_type % num_points % max_dim of complex % values of distance matrix
-            // TODO: Complete matrix, or just upper part? For now, I did the whole matrix
-            void _load_binary_from_distance_matrix( MPI_File file )
-            {
-
-                // read preamble
-                std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_vector( file, 0, 4, preamble );
-
-                _m_no_points = preamble[ 2 ];
-                _m_upper_dim = preamble[ 3 ];
-
-                int64_t matrix_size = _m_no_points*_m_no_points;
-
-                std::vector< double > distances;
-                MPI_Offset point_coordinate_offset = preamble.size() * sizeof( int64_t );
-                mpi_utils::file_read_at_vector( file, point_coordinate_offset, matrix_size, distances );
-
-
-                _m_distance_matrix.resize( _m_no_points );
-                for( int64_t i = 0; i < _m_no_points; i++ ) {
-                    _m_distance_matrix[ i ].resize( _m_no_points );
-                }
-
-                for( int64_t i = 0; i < matrix_size; i++ ) {
-                    _m_distance_matrix[ i / _m_no_points ][ i%_m_no_points ] = distances[ i ];
-                }
-
-            }
-
 
             void _precompute_breakpoints()
             {
