@@ -63,12 +63,12 @@ namespace dipha {
                     _m_upper_dim = upper_dim;
                 }
 
-              //  _m_upper_dim = preamble[ 3 ];
-
                 int64_t matrix_size = _m_no_points*_m_no_points;
 
                 std::vector< double > distances;
                 MPI_Offset point_coordinate_offset = preamble.size( ) * sizeof( int64_t );
+                if( preamble[ 1 ] == 7 )
+                    point_coordinate_offset = 3 * sizeof( int64_t );
                 mpi_utils::file_read_at_vector( file, point_coordinate_offset, matrix_size, distances );
 
 

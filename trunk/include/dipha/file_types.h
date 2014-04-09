@@ -29,7 +29,8 @@ namespace dipha {
             WEIGHTED_CUBICAL_COMPLEX = 1,
             PERSISTENCE_DIAGRAM = 2,
             INTRINSIC_FULL_RIPS_COMPLEX = 4,
-            INTRINSIC_SPARSE_RIPS_COMPLEX = 6
+            INTRINSIC_SPARSE_RIPS_COMPLEX = 6,
+            DISTANCE_MATRIX = 7
         };
 
         inline void assert_dipha_type( const std::string& filename )
