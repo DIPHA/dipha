@@ -41,8 +41,8 @@ function plot_persistence_diagram( filename )
     line( [min_value, max_value], [min_value, max_value], 'Color','k' );
 
     %% restrict axis
-    safe_min = min_value - eps( min_value );
-    safe_max = max_value + eps( max_value );
+    safe_min = min_value - 10 * eps( min_value );
+    safe_max = max_value + 10* eps( max_value );
     axis( [safe_min, safe_max, safe_min, safe_max] );
     axis vis3d  
 end
