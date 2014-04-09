@@ -54,22 +54,6 @@ namespace dipha {
                 return derived()._get_local_value( idx );
             }
 
-            // boundary of given cell
-            void get_local_boundary( int64_t idx, std::vector< int64_t >& boundary ) const
-            {
-                assert( idx >= element_distribution::get_local_begin( get_num_cells() ) && idx < element_distribution::get_local_end( get_num_cells() ) );
-                boundary.clear();
-                derived()._get_local_boundary( idx, boundary );
-            }
-
-            // coboundary of given cell
-            void get_local_coboundary( int64_t idx, std::vector< int64_t >& coboundary ) const
-            {
-                assert( idx >= element_distribution::get_local_begin( get_num_cells() ) && idx < element_distribution::get_local_end( get_num_cells() ) );
-                coboundary.clear();
-                derived()._get_local_coboundary( idx, coboundary );
-            }
-
             // loads the object from file
             void load_binary( const std::string& filename )
             {
@@ -78,6 +62,43 @@ namespace dipha {
                 derived()._load_binary( file );
                 MPI_File_close( &file );
             }
+
+            // AT LEAST ONE of following two functions has has to be implemented by template parameter
+        public:
+            void get_global_boundaries( const std::vector< int64_t >& queries,
+                                        data_structures::write_once_array_of_arrays< int64_t >& answers ) const
+            {
+                answers.clear();
+                answers.init( queries.size() );
+                derived()._get_global_boundaries( queries, answers );
+            }
+        private:
+            // boundary of given cell
+            void get_local_boundary( int64_t idx, std::vector< int64_t >& boundary ) const
+            {
+                assert( idx >= element_distribution::get_local_begin( get_num_cells() ) && idx < element_distribution::get_local_end( get_num_cells() ) );
+                boundary.clear();
+                derived()._get_local_boundary( idx, boundary );
+            }
+
+            // AT LEAST ONE of following two functions has has to be implemented by template parameter
+        public:
+            void get_global_coboundaries( const std::vector< int64_t >& queries,
+                                          data_structures::write_once_array_of_arrays< int64_t >& answers ) const
+            {
+                answers.clear();
+                answers.init( queries.size() );
+                derived()._get_global_coboundaries( queries, answers );
+            }
+        private:
+            // coboundary of given cell
+            void get_local_coboundary( int64_t idx, std::vector< int64_t >& coboundary ) const
+            {
+                assert( idx >= element_distribution::get_local_begin( get_num_cells() ) && idx < element_distribution::get_local_end( get_num_cells() ) );
+                coboundary.clear();
+                derived()._get_local_coboundary( idx, coboundary );
+            }
+            
 
             // functions that CAN be implemented by template parameter to improve performance
         public:
@@ -95,22 +116,6 @@ namespace dipha {
                 answers.clear();
                 answers.reserve( queries.size() );
                 derived()._get_global_dims( queries, answers );
-            }
-
-            void get_global_boundaries( const std::vector< int64_t >& queries,
-                                        data_structures::write_once_array_of_arrays< int64_t >& answers ) const
-            {
-                answers.clear();
-                answers.init( queries.size() );
-                derived()._get_global_boundaries( queries, answers );
-            }
-
-            void get_global_coboundaries( const std::vector< int64_t >& queries,
-                                          data_structures::write_once_array_of_arrays< int64_t >& answers ) const
-            {
-                answers.clear();
-                answers.init( queries.size() );
-                derived()._get_global_coboundaries( queries, answers );
             }
 
             double get_max_value() const
