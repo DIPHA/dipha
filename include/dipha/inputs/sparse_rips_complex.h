@@ -58,8 +58,6 @@ namespace dipha {
                                int64_t upper_dim = std::numeric_limits< int64_t >::max(),
                                double upper_value = std::numeric_limits< double >::max( ) )
             {
-                MPI_Offset offset;
-
                 // read preamble
                 std::vector< int64_t > preamble;
                 mpi_utils::file_read_at_vector( file, 0, 4, preamble );
@@ -73,16 +71,17 @@ namespace dipha {
                     _m_upper_dim = upper_dim;
                 }
 
-                offset = preamble.size( ) * sizeof( int64_t );
-
-             //   mpi_utils::file_read_at( file, offset, _m_threshold );
                 _m_threshold = upper_value;
 
-                offset += sizeof( double );
+                if( preamble[ 1 ] == 7 )
+                    _m_threshold = 2 * upper_value;
 
                 int64_t matrix_size = _m_no_points*_m_no_points;
 
                 std::vector< double > distances;
+                MPI_Offset offset = preamble.size( ) * sizeof(int64_t) + sizeof( double );
+                if( preamble[1] == 7)
+                    offset = 3 * sizeof(int64_t);
                 mpi_utils::file_read_at_vector( file, offset, matrix_size, distances );
 
 
