@@ -69,7 +69,6 @@ namespace dipha {
                 return _m_upper_dim;
             }
 
-
             int64_t _get_num_cells() const
             {
                 return _m_breakpoints[ _m_upper_dim + 1 ];
@@ -296,11 +295,6 @@ namespace dipha {
                 return result;
             }
 
-
-            // other internal functions
-
-
-
             // index -> set of points (in decreasing index order)
             template<typename OutputIterator>
             OutputIterator conversion( int64_t idx, OutputIterator out ) const
@@ -318,8 +312,6 @@ namespace dipha {
                 }
                 return out;
             }
-
-
 
             template<typename InputIterator>
             double diameter( InputIterator begin, InputIterator end ) const
