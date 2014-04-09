@@ -389,13 +389,6 @@ namespace dipha {
 }
 
 #ifdef DIPHA_TEST
-    struct ExtrinsicFullRipsTest {
-        typedef dipha::inputs::full_rips_complex complex_type;
-        static std::string get_test_filename( ) { return std::string( "extrinsic_full_rips.complex" ); }
-    };
-    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicFullRips, TestPrimalWeightedCellComplex, ExtrinsicFullRipsTest );
-    INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicFullRips, TestDualWeightedCellComplex, ExtrinsicFullRipsTest );
-
     struct IntrinsicFullRipsTest {
         typedef dipha::inputs::full_rips_complex complex_type;
         static std::string get_test_filename( ) { return std::string( "intrinsic_full_rips.complex" ); }
