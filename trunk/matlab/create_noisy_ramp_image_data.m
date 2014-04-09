@@ -17,7 +17,7 @@
 %  You should have received a copy of the GNU Lesser General Public License
 %  along with DIPHA.  If not, see <http://www.gnu.org/licenses/>.
 
-function create_noisy_ramp_image_data( dimension, resolution )
+function filename = create_noisy_ramp_image_data( dimension, resolution )
     %% create filename based on parameters
     filename = ['noisy_ramp_' num2str( dimension) '_' num2str( resolution ) '.complex'];
 
@@ -25,7 +25,7 @@ function create_noisy_ramp_image_data( dimension, resolution )
     lattice_resolution = repmat( resolution, 1, dimension );
     ramp = reshape( 1:prod( lattice_resolution ), lattice_resolution );
     noise = rand( repmat( resolution, 1, dimension ) ) * ( numel( ramp ) - 1 );
-    data = ramp + noise;
+    data = ramp + noise/3;
     
     %% save to disk in DIPHA format
     save_weighted_cubical_complex( data, filename );

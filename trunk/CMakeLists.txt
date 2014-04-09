@@ -168,26 +168,6 @@ add_test(NAME compare_dual_explicit
         )
 set_tests_properties(compare_dual_explicit PROPERTIES DEPENDS create_dual_explicit)
 
-add_test(NAME create_primal_extrinsic_full_rips
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> extrinsic_full_rips.complex primal_extrinsic_full_rips.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-add_test(NAME compare_primal_extrinsic_full_rips
-         COMMAND ${CMAKE_COMMAND} -E compare_files primal_extrinsic_full_rips.DIPHA_TEST extrinsic_full_rips.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-set_tests_properties(compare_primal_extrinsic_full_rips PROPERTIES DEPENDS create_primal_extrinsic_full_rips)        
-
-add_test(NAME create_dual_extrinsic_full_rips
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual extrinsic_full_rips.complex dual_extrinsic_full_rips.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-add_test(NAME compare_dual_extrinsic_full_rips
-         COMMAND ${CMAKE_COMMAND} -E compare_files dual_extrinsic_full_rips.DIPHA_TEST extrinsic_full_rips.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-set_tests_properties(compare_dual_extrinsic_full_rips PROPERTIES DEPENDS create_dual_extrinsic_full_rips)            
-
 add_test(NAME create_primal_intrinsic_full_rips
          COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> intrinsic_full_rips.complex primal_intrinsic_full_rips.DIPHA_TEST
          WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
@@ -208,26 +188,6 @@ add_test(NAME compare_dual_intrinsic_full_rips
         )
 set_tests_properties(compare_dual_intrinsic_full_rips PROPERTIES DEPENDS create_dual_intrinsic_full_rips)           
 
-add_test(NAME create_primal_extrinsic_sparse_rips_large_threshold
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> extrinsic_sparse_rips_large_threshold.complex primal_extrinsic_sparse_rips_large_threshold.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-add_test(NAME compare_primal_extrinsic_sparse_rips_large_threshold
-         COMMAND ${CMAKE_COMMAND} -E compare_files primal_extrinsic_sparse_rips_large_threshold.DIPHA_TEST extrinsic_sparse_rips_large_threshold.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-set_tests_properties(compare_primal_extrinsic_sparse_rips_large_threshold PROPERTIES DEPENDS create_primal_extrinsic_sparse_rips_large_threshold)              
-
-add_test(NAME create_dual_extrinsic_sparse_rips_large_threshold
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual extrinsic_sparse_rips_large_threshold.complex dual_extrinsic_sparse_rips_large_threshold.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-add_test(NAME compare_dual_extrinsic_sparse_rips_large_threshold
-         COMMAND ${CMAKE_COMMAND} -E compare_files dual_extrinsic_sparse_rips_large_threshold.DIPHA_TEST extrinsic_sparse_rips_large_threshold.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-set_tests_properties(compare_dual_extrinsic_sparse_rips_large_threshold PROPERTIES DEPENDS create_dual_extrinsic_sparse_rips_large_threshold)            
-
 add_test(NAME create_primal_intrinsic_sparse_rips_large_threshold
          COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> intrinsic_sparse_rips_large_threshold.complex primal_intrinsic_sparse_rips_large_threshold.DIPHA_TEST
          WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
@@ -247,26 +207,6 @@ add_test(NAME compare_dual_intrinsic_sparse_rips_large_threshold
          WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
         )
 set_tests_properties(compare_dual_intrinsic_sparse_rips_large_threshold PROPERTIES DEPENDS create_dual_intrinsic_sparse_rips_large_threshold)              
-		
-add_test(NAME create_primal_extrinsic_sparse_rips
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> extrinsic_sparse_rips.complex primal_extrinsic_sparse_rips.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-add_test(NAME compare_primal_extrinsic_sparse_rips
-         COMMAND ${CMAKE_COMMAND} -E compare_files primal_extrinsic_sparse_rips.DIPHA_TEST extrinsic_sparse_rips.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-set_tests_properties(compare_primal_extrinsic_sparse_rips PROPERTIES DEPENDS create_primal_extrinsic_sparse_rips)               
-
-add_test(NAME create_dual_extrinsic_sparse_rips
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual extrinsic_sparse_rips.complex dual_extrinsic_sparse_rips.DIPHA_TEST
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-add_test(NAME compare_dual_extrinsic_sparse_rips
-         COMMAND ${CMAKE_COMMAND} -E compare_files dual_extrinsic_sparse_rips.DIPHA_TEST extrinsic_sparse_rips.diagram
-         WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/test_data
-        )
-set_tests_properties(compare_dual_extrinsic_sparse_rips PROPERTIES DEPENDS create_dual_extrinsic_sparse_rips)                 
 
 add_test(NAME create_primal_intrinsic_sparse_rips
          COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> intrinsic_sparse_rips.complex primal_intrinsic_sparse_rips.DIPHA_TEST

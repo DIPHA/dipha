@@ -116,13 +116,9 @@ int main( int argc, char** argv )
     case dipha::file_types::WEIGHTED_EXPLICIT_COMPLEX:
         compute< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
-    case dipha::file_types::EXTRINSIC_FULL_RIPS_COMPLEX:
-        // Go to next case
     case dipha::file_types::INTRINSIC_FULL_RIPS_COMPLEX:
         compute< dipha::inputs::full_rips_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
-    case dipha::file_types::EXTRINSIC_SPARSE_RIPS_COMPLEX:
-        // Go to next case
     case dipha::file_types::INTRINSIC_SPARSE_RIPS_COMPLEX:
         compute< dipha::inputs::sparse_rips_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;

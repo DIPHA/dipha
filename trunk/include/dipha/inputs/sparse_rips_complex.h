@@ -60,9 +60,6 @@ namespace dipha {
                 mpi_utils::file_read_at_vector( file, 0, 2, preamble );
                 int64_t type = preamble[ 1 ];
 
-                if( type == dipha::file_types::EXTRINSIC_SPARSE_RIPS_COMPLEX ) {
-                    _load_binary_from_point_coordinates( file );
-                }
                 if( type == dipha::file_types::INTRINSIC_SPARSE_RIPS_COMPLEX ) {
                     _load_binary_from_distance_matrix( file );
                 }
@@ -663,61 +660,7 @@ namespace dipha {
                }
                */
 
-        protected:
-
-
-            // internal functions for initialization
-
-
-            // Loads the complete_rips_complex from given file in binary format -- all symbols are 64 bit wide
-            // Format: magic_number % file_type % num_points % dim_of_space % max_dim of complex % coordinates_of_points
-            void _load_binary_from_point_coordinates( MPI_File file )
-            {
-
-                MPI_Offset offset;
-
-                // read preamble
-                std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_vector( file, 0, 5, preamble );
-
-                _m_no_points = preamble[ 2 ];
-                int64_t point_dim = preamble[ 3 ];
-                _m_upper_dim = preamble[ 4 ];
-
-                offset = preamble.size() * sizeof( int64_t );
-
-                mpi_utils::file_read_at( file, offset, _m_threshold );
-
-                offset += sizeof( double );
-
-                std::vector< double > point_coordinates;
-
-                mpi_utils::file_read_at_vector( file, offset, _m_no_points*point_dim, point_coordinates );
-
-                _m_distance_matrix.resize( _m_no_points );
-
-                for( int i = 0; i < _m_no_points; i++ ) {
-                    _m_distance_matrix[ i ].resize( _m_no_points );
-                    for( int j = 0; j < _m_no_points; j++ ) {
-                        _m_distance_matrix[ i ][ j ] = _compute_distance_of_points( i, j, point_coordinates, point_dim );
-                    }
-                }
-
-            }
-
-
-            double _compute_distance_of_points( int64_t p_idx, int64_t q_idx, const std::vector<double>& coords, int64_t dim ) const
-            {
-
-                int64_t p_offset = dim * p_idx;
-                int64_t q_offset = dim * q_idx;
-                double akk = 0.;
-                for( int64_t i = 0; i < dim; i++ ) {
-                    akk += pow( coords[ p_offset + i ] - coords[ q_offset + i ], 2 );
-                }
-                return sqrt( akk );
-
-            }
+        protected:        
 
             // Loads the complete_rips_complex from given file in binary format -- all symbols are 64 bit wide
             // Format: magic_number % file_type % num_points % max_dim of complex % values of distance matrix
@@ -896,20 +839,6 @@ namespace dipha {
 }
 
 #ifdef DIPHA_TEST
-struct ExtrinsicSparseRipsTest {
-    typedef dipha::inputs::sparse_rips_complex complex_type;
-    static std::string get_test_filename() { return std::string( "extrinsic_sparse_rips.complex" ); }
-};
-INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRips, TestPrimalWeightedCellComplex, ExtrinsicSparseRipsTest );
-INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRips, TestDualWeightedCellComplex, ExtrinsicSparseRipsTest );
-
-struct ExtrinsicSparseRipsLargeThresholdTest {
-    typedef dipha::inputs::sparse_rips_complex complex_type;
-    static std::string get_test_filename() { return std::string( "extrinsic_sparse_rips_large_threshold.complex" ); }
-};
-INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRipsLargeThreshold, TestPrimalWeightedCellComplex, ExtrinsicSparseRipsLargeThresholdTest );
-INSTANTIATE_TYPED_TEST_CASE_P( ExtrinsicSparseRipsLargeThreshold, TestDualWeightedCellComplex, ExtrinsicSparseRipsLargeThresholdTest );
-
 struct IntrinsicSparseRipsTest {
     typedef dipha::inputs::sparse_rips_complex complex_type;
     static std::string get_test_filename() { return std::string( "intrinsic_sparse_rips.complex" ); }
