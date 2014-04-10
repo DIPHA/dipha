@@ -104,6 +104,9 @@ int main( int argc, char** argv )
 
         dipha::mpi_utils::cout_if_root() << std::endl << "Input filename: " << std::endl << input_filename << std::endl;
 
+        dipha::mpi_utils::cout_if_root( ) << std::endl << "upper_dim: " << upper_dim << std::endl;
+        dipha::mpi_utils::cout_if_root( ) << std::endl << "upper_value: " << upper_value << std::endl;
+
         dipha::mpi_utils::cout_if_root() << std::endl << "Number of processes used: " << std::endl << dipha::mpi_utils::get_num_processes() << std::endl;
         dipha::mpi_utils::cout_if_root() << std::endl << "Detailed information for rank 0:" << std::endl;
         dipha::mpi_utils::cout_if_root() << std::setw( 11 ) << "time" << std::setw( 13 ) << "prior mem" << std::setw( 13 ) << "peak mem" << std::setw( 13 ) << "bytes recv" << std::endl;
