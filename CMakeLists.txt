@@ -83,9 +83,9 @@ endif()
 
 SET(TEST_DATA_DIR ${CMAKE_HOME_DIRECTORY}/test_data)
 
-macro(REGRESSION_TEST TEST_NAME UPPER_DIM UPPER_VALUE)
+macro(REGRESSION_TEST TEST_NAME UPPER_DIM UPPER_VALUE INPUT)
     add_test(NAME create_primal_${TEST_NAME}
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --upper_dim ${UPPER_DIM} --upper_value ${UPPER_VALUE} ${TEST_NAME}.complex primal_${TEST_NAME}.DIPHA_TEST
+         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --upper_dim ${UPPER_DIM} --upper_value ${UPPER_VALUE} ${INPUT}.complex primal_${TEST_NAME}.DIPHA_TEST
          WORKING_DIRECTORY ${TEST_DATA_DIR}
         )
 	add_test(NAME compare_primal_${TEST_NAME}
@@ -95,7 +95,7 @@ macro(REGRESSION_TEST TEST_NAME UPPER_DIM UPPER_VALUE)
 	set_tests_properties(compare_primal_${TEST_NAME} PROPERTIES DEPENDS create_primal_${TEST_NAME})
 
 	add_test(NAME create_dual_${TEST_NAME}
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual --upper_dim ${UPPER_DIM} --upper_value ${UPPER_VALUE} ${TEST_NAME}.complex dual_${TEST_NAME}.DIPHA_TEST
+         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual --upper_dim ${UPPER_DIM} --upper_value ${UPPER_VALUE} ${INPUT}.complex dual_${TEST_NAME}.DIPHA_TEST
          WORKING_DIRECTORY ${TEST_DATA_DIR}
         )
 	add_test(NAME compare_dual_${TEST_NAME}
@@ -108,10 +108,15 @@ endmacro(REGRESSION_TEST)
 SET(DEFAULT_UPPER_DIM 9223372036854775807)
 SET(DEFAULT_UPPER_VALUE 1.79769e+308)
 
-REGRESSION_TEST(cubical ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE})
-REGRESSION_TEST(intrinsic_full_rips 2 ${DEFAULT_UPPER_VALUE})
-REGRESSION_TEST(intrinsic_sparse_rips_large_threshold 2 3.0)      
-REGRESSION_TEST(intrinsic_sparse_rips 2 1.95)           
+REGRESSION_TEST(cubical ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} cubical)
+REGRESSION_TEST(intrinsic_full_rips 2 ${DEFAULT_UPPER_VALUE} intrinsic_full_rips)
+REGRESSION_TEST(intrinsic_sparse_rips_large_threshold 2 3.0 intrinsic_sparse_rips_large_threshold)      
+REGRESSION_TEST(intrinsic_sparse_rips 2 1.95 intrinsic_sparse_rips)
+REGRESSION_TEST(smooth_def_def ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} smooth_16)     
+REGRESSION_TEST(smooth_def_5 ${DEFAULT_UPPER_DIM} 5 smooth_16)  
+REGRESSION_TEST(smooth_2_def 2 ${DEFAULT_UPPER_VALUE} smooth_16)  
+REGRESSION_TEST(smooth_1_-1 1 -1 smooth_16)  
+
 
 add_test(NAME create_dualize
          COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dualize> primal_explicit.complex dualize.DIPHA_TEST
