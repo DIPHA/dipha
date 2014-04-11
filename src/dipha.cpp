@@ -79,7 +79,7 @@ void compute( const std::string& input_filename, bool dualize, int64_t upper_dim
         dipha::mpi_utils::cout_if_root() << std::endl << "Number of cells in input: " << std::endl << complex.get_num_cells() << std::endl;
     dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
     dipha::data_structures::write_once_column_array reduced_columns;
-    dipha::algorithms::compute_reduced_columns( complex, dualize, upper_dim, upper_value, filtration_to_cell_map, reduced_columns );
+    dipha::algorithms::compute_reduced_columns( complex, dualize, upper_dim, filtration_to_cell_map, reduced_columns );
     DIPHA_MACROS_BENCHMARK( dipha::outputs::save_persistence_diagram( output_filename, complex, filtration_to_cell_map, reduced_columns, dualize, upper_dim, upper_value ); );
 }
 
@@ -118,12 +118,6 @@ int main( int argc, char** argv )
         break;
     case dipha::file_types::WEIGHTED_EXPLICIT_COMPLEX:
         compute< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
-        break;
-    case dipha::file_types::INTRINSIC_FULL_RIPS_COMPLEX:
-        compute< dipha::inputs::full_rips_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
-        break;
-    case dipha::file_types::INTRINSIC_SPARSE_RIPS_COMPLEX:
-        compute< dipha::inputs::sparse_rips_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
     case dipha::file_types::DISTANCE_MATRIX:
         if( upper_value == std::numeric_limits< double >::max( ) )

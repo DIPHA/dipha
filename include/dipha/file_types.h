@@ -28,8 +28,6 @@ namespace dipha {
             WEIGHTED_EXPLICIT_COMPLEX = 0,
             WEIGHTED_CUBICAL_COMPLEX = 1,
             PERSISTENCE_DIAGRAM = 2,
-            INTRINSIC_FULL_RIPS_COMPLEX = 4,
-            INTRINSIC_SPARSE_RIPS_COMPLEX = 6,
             DISTANCE_MATRIX = 7
         };
 
