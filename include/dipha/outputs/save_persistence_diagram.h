@@ -62,7 +62,22 @@ namespace dipha {
             std::vector< std::pair< int64_t, bool > > non_essential_cells;
 
             /// get maximum value of complex
-            const double max_value = std::min( complex.get_max_value( ), upper_value );
+            double max_value = std::numeric_limits< double >::max();
+            if( upper_value == std::numeric_limits< double >::max() ) {
+                max_value = complex.get_max_value();
+            } else {
+                double local_max_value_smaller_than = std::numeric_limits< double >::lowest( );
+                for( int64_t idx = col_begin; idx < col_end; idx++ ) {
+                    double value = complex.get_local_value( idx );
+                    if( value <= upper_value )
+                        local_max_value_smaller_than = value > local_max_value_smaller_than ? value : local_max_value_smaller_than;
+                }
+                std::vector< double > max_value_smaller_than_per_rank( mpi_utils::get_num_processes( ) );
+                MPI_Allgather( &local_max_value_smaller_than, 1, MPI_DOUBLE, max_value_smaller_than_per_rank.data( ), 1, MPI_DOUBLE, MPI_COMM_WORLD );
+                max_value = *std::max_element( max_value_smaller_than_per_rank.begin( ), max_value_smaller_than_per_rank.end( ) );
+            }
+
+
             const int64_t max_dim = std::min( complex.get_max_dim( ), upper_dim );
 
             data_structures::distributed_vector< bool > is_cell_essential;
@@ -134,7 +149,7 @@ namespace dipha {
                         double birth_value = *iterator_of_birth_value_answers++;
                         double death_value = *iterator_of_death_value_answers++;
                         if( death_value > birth_value ) {
-                            if( death_value <= upper_value ) {
+                            if( death_value <= max_value ) {
                                 local_dims_and_pairs.push_back( std::make_pair( birth_dim, std::make_pair( birth_value, death_value ) ) );
                             } else {
                                 int64_t shifted_dim = -birth_dim - 1;
@@ -155,7 +170,7 @@ namespace dipha {
                     if( dim <= max_dim && ( !without_top_dimension_essentials || dim < max_dim ) ) {
                         int64_t shifted_dim = -dim - 1;
                         double value = complex.get_local_value( idx );
-                        if( value <= upper_value )
+                        if( value <= max_value )
                             local_dims_and_pairs.push_back( std::make_pair( shifted_dim, std::make_pair( value, max_value ) ) );
                     }
                 }
