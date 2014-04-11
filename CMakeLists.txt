@@ -108,14 +108,20 @@ endmacro(REGRESSION_TEST)
 SET(DEFAULT_UPPER_DIM 9223372036854775807)
 SET(DEFAULT_UPPER_VALUE 1.7976931348623157e+308)
 
-REGRESSION_TEST(cubical ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} cubical)
-REGRESSION_TEST(intrinsic_full_rips 2 ${DEFAULT_UPPER_VALUE} intrinsic_full_rips)
-REGRESSION_TEST(intrinsic_sparse_rips_large_threshold 2 3.0 intrinsic_sparse_rips_large_threshold)      
-REGRESSION_TEST(intrinsic_sparse_rips 2 1.95 intrinsic_sparse_rips)
 REGRESSION_TEST(smooth_def_def ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} smooth_16)     
 REGRESSION_TEST(smooth_def_5 ${DEFAULT_UPPER_DIM} 5 smooth_16)  
 REGRESSION_TEST(smooth_2_def 2 ${DEFAULT_UPPER_VALUE} smooth_16)  
 REGRESSION_TEST(smooth_1_-1 1 -1 smooth_16)  
+
+REGRESSION_TEST(sphere_3_def 3 ${DEFAULT_UPPER_VALUE} sphere_3_32)
+REGRESSION_TEST(sphere_2_def 2 ${DEFAULT_UPPER_VALUE} sphere_3_32)
+REGRESSION_TEST(sphere_1_def 1 ${DEFAULT_UPPER_VALUE} sphere_3_32)
+
+REGRESSION_TEST(sphere_3_2   3 2   sphere_3_32)  
+REGRESSION_TEST(sphere_3_0.8 3 0.8 sphere_3_32)
+REGRESSION_TEST(sphere_2_0.5 2 0.5 sphere_3_32)
+REGRESSION_TEST(sphere_1_0.3 2 0.3 sphere_3_32)
+
 
 add_test(NAME create_dualize
          COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dualize> primal_explicit.complex dualize.DIPHA_TEST
