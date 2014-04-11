@@ -21,6 +21,10 @@ function filename = create_sphere( num_points, dimension )
     %% create filename based on parameters
     filename = ['sphere_' num2str( dimension ) '_' num2str( num_points ) '.complex'];
 
+    %% set seed for random number generator
+    RandStream.setDefaultStream(RandStream('mt19937ar','seed',pi));
+    %RandStream.setDefaultStream(RandStream('mt19937ar','seed',sum(100*clock)));
+    
     %% create actual data
     random_points = rand( dimension, num_points ) - 0.5;
     normalization_factor = 1 ./ sqrt( sum( random_points.^2 ) );
