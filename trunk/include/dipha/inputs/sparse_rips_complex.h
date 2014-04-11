@@ -330,6 +330,11 @@ namespace dipha {
                         }
                         */
 
+                if( _m_full_indices_in_range.empty() ) {
+                    std::cout << std::endl << "Error: Complex too small for number of processes used!" << std::endl;
+                    MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
+                }
+
                 // Finally, tell everyone the maximal global index in the range (so that everyone can ask at the right place)
                 int64_t maximal_global_idx = _m_full_indices_in_range.back();
                 // Silly: Create vector of size one to use send_vector from mpi_utils
