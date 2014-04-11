@@ -77,7 +77,6 @@ namespace dipha {
                 max_value = *std::max_element( max_value_smaller_than_per_rank.begin( ), max_value_smaller_than_per_rank.end( ) );
             }
 
-
             const int64_t max_dim = std::min( complex.get_max_dim( ), upper_dim );
 
             data_structures::distributed_vector< bool > is_cell_essential;
@@ -148,7 +147,7 @@ namespace dipha {
                         int64_t birth_dim = *iterator_of_birth_dim_answers++;
                         double birth_value = *iterator_of_birth_value_answers++;
                         double death_value = *iterator_of_death_value_answers++;
-                        if( death_value > birth_value ) {
+                        if( birth_value != death_value && birth_value < max_value ) {
                             if( death_value <= max_value ) {
                                 local_dims_and_pairs.push_back( std::make_pair( birth_dim, std::make_pair( birth_value, death_value ) ) );
                             } else {
