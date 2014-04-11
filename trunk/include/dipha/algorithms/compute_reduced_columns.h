@@ -27,7 +27,6 @@ namespace dipha {
         void compute_reduced_columns( const inputs::abstract_weighted_cell_complex< Complex >& complex,
                                       bool dualize,
                                       int64_t upper_dim,
-                                      double upper_value,
                                       data_structures::distributed_vector< int64_t >& filtration_to_cell_map,
                                       data_structures::write_once_column_array& reduced_columns )
         {
