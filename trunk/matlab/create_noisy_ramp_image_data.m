@@ -21,6 +21,10 @@ function filename = create_noisy_ramp_image_data( dimension, resolution )
     %% create filename based on parameters
     filename = ['noisy_ramp_' num2str( dimension) '_' num2str( resolution ) '.complex'];
 
+    %% set seed for random number generator
+    RandStream.setDefaultStream(RandStream('mt19937ar','seed',pi));
+    %RandStream.setDefaultStream(RandStream('mt19937ar','seed',sum(100*clock)));
+    
     %% create actual data
     lattice_resolution = repmat( resolution, 1, dimension );
     ramp = reshape( 1:prod( lattice_resolution ), lattice_resolution );
