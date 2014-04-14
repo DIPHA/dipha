@@ -63,14 +63,14 @@ int main( int argc, char** argv )
     bool benchmark = false; // print timings / info
     parse_command_line( argc, argv, benchmark, input_filename, output_filename );
 
-    if( dipha::file_types::get_file_type( input_filename ) == dipha::file_types::WEIGHTED_EXPLICIT_COMPLEX ) {
+    if( dipha::file_types::get_file_type( input_filename ) == dipha::file_types::WEIGHTED_BOUNDARY_MATRIX ) {
         dipha::algorithms::dualize_explicit_complex( input_filename, output_filename );
         if( benchmark ) {
             dipha::mpi_utils::cout_if_root( ) << std::endl << "Overall running time in seconds: " << std::endl;
             dipha::mpi_utils::cout_if_root( ) << std::setprecision( 1 ) << MPI_Wtime( ) - time_at_start << std::endl;
         }
     } else {
-        dipha::mpi_utils::error_printer_if_root( ) << "Input file " << input_filename << " is not of type WEIGHTED_EXPLICIT_COMPLEX" << std::endl;
+        dipha::mpi_utils::error_printer_if_root( ) << "Input file " << input_filename << " is not of type WEIGHTED_BOUNDARY_MATRIX" << std::endl;
         MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
     }
 

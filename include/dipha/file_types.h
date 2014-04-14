@@ -25,8 +25,8 @@ namespace dipha {
     namespace file_types {
         enum file_type : int64_t {
             DIPHA = 8067171840, // == ( int64_t )'D' * ( int64_t )'i' * ( int64_t )'p' * ( int64_t )'h' * ( int64_t )'a'
-            WEIGHTED_EXPLICIT_COMPLEX = 0,
-            WEIGHTED_CUBICAL_COMPLEX = 1,
+            WEIGHTED_BOUNDARY_MATRIX = 0,
+            IMAGE_DATA = 1,
             PERSISTENCE_DIAGRAM = 2,
             DISTANCE_MATRIX = 7
         };

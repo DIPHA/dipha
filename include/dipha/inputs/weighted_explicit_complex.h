@@ -59,7 +59,7 @@ namespace dipha {
             int64_t _get_max_dim() const { return max_dim; }
 
             // Loads the weighted_cubical_complex from given file in binary format -- all symbols are 64 bit wide
-            // Format: file_types::DIPHA % file_types::WEIGHTED_EXPLICIT_COMPLEX % boundary_type % num_cells (N) % max_dim % dim1 % ... 
+            // Format: file_types::DIPHA % file_types::WEIGHTED_BOUNDARY_MATRIX % boundary_type % num_cells (N) % max_dim % dim1 % ... 
             //         % dimN % value1 % ... % valueN % offset1 % ... % offsetN % num_entries (M) % entry1 % ... % entryM 
             void _load_binary( MPI_File file,
                                int64_t upper_dim = std::numeric_limits< int64_t >::max( ),

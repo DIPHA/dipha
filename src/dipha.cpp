@@ -115,10 +115,10 @@ int main( int argc, char** argv )
     }
 
     switch( dipha::file_types::get_file_type( input_filename ) ) {
-    case dipha::file_types::WEIGHTED_CUBICAL_COMPLEX:
+    case dipha::file_types::IMAGE_DATA:
         compute< dipha::inputs::weighted_cubical_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
-    case dipha::file_types::WEIGHTED_EXPLICIT_COMPLEX:
+    case dipha::file_types::WEIGHTED_BOUNDARY_MATRIX:
         compute< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
     case dipha::file_types::DISTANCE_MATRIX:

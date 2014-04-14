@@ -45,7 +45,6 @@ namespace dipha {
         protected:
 
             // Loads the complete_rips_complex from given file in binary format -- all symbols are 64 bit wide
-            // Format: magic_number % file_type % num_points % max_dim of complex % values of distance matrix
             void _load_binary( MPI_File file,
                                int64_t upper_dim = std::numeric_limits< int64_t >::max( ),
                                double upper_value = std::numeric_limits< double >::max( ) )
@@ -66,9 +65,7 @@ namespace dipha {
                 int64_t matrix_size = _m_no_points*_m_no_points;
 
                 std::vector< double > distances;
-                MPI_Offset point_coordinate_offset = preamble.size( ) * sizeof( int64_t );
-                if( preamble[ 1 ] == 7 )
-                    point_coordinate_offset = 3 * sizeof( int64_t );
+                MPI_Offset point_coordinate_offset = 3 * sizeof( int64_t );
                 mpi_utils::file_read_at_vector( file, point_coordinate_offset, matrix_size, distances );
 
 
