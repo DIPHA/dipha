@@ -20,6 +20,10 @@
 function create_noise_image_data( dimension, resolution )
     %% create filename based on parameters
     filename = ['noise_' num2str( dimension) '_' num2str( resolution ) '.complex'];
+    
+    %% set seed for random number generator
+    RandStream.setDefaultStream(RandStream('mt19937ar','seed',pi));
+    %RandStream.setDefaultStream(RandStream('mt19937ar','seed',sum(100*clock)));
 
     %% create actual data
     data = rand( repmat( resolution, 1, dimension ) );
