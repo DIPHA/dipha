@@ -26,5 +26,5 @@ function create_ramp_image_data( dimension, resolution )
     data = reshape( 1:prod( lattice_resolution ), lattice_resolution );
 
     %% save to disk in DIPHA format
-    save_weighted_cubical_complex( data, filename );
+    save_image_data( data, filename );
 end

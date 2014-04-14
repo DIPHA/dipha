@@ -29,5 +29,5 @@ function create_noise_image_data( dimension, resolution )
     data = rand( repmat( resolution, 1, dimension ) );
 
     %% save to disk in DIPHA format
-    save_weighted_cubical_complex( data, filename );
+    save_image_data( data, filename );
 end

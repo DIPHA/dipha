@@ -38,5 +38,5 @@ function filename = create_smooth_image_data( resolution )
             6 .* cos(1 .* X) .* cos( 3 .* Y ) .* cos( 2 .* Z );
     
     %% save to disk in DIPHA format
-    save_weighted_cubical_complex( data, filename );
+    save_image_data( data, filename );
 end
