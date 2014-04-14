@@ -32,5 +32,5 @@ function filename = create_noisy_ramp_image_data( dimension, resolution )
     data = ramp + noise/3;
     
     %% save to disk in DIPHA format
-    save_weighted_cubical_complex( data, filename );
+    save_image_data( data, filename );
 end
