@@ -27,8 +27,8 @@ namespace dipha {
         {
             MPI_Barrier( MPI_COMM_WORLD );
 
-            if( dipha::file_types::get_file_type( input_filename ) != dipha::file_types::WEIGHTED_EXPLICIT_COMPLEX ) {
-                mpi_utils::error_printer_if_root( ) << input_filename << " is not a WEIGHTED_EXPLICIT_COMPLEX!" << std::endl;
+            if( dipha::file_types::get_file_type( input_filename ) != dipha::file_types::WEIGHTED_BOUNDARY_MATRIX ) {
+                mpi_utils::error_printer_if_root( ) << input_filename << " is not a WEIGHTED_BOUNDARY_MATRIX!" << std::endl;
                 MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
             }
 

@@ -129,16 +129,16 @@ int main( int argc, char** argv )
     parse_command_line( argc, argv, dualize, upper_dim, upper_value, input_filename, output_filename );
 
     switch( dipha::file_types::get_file_type( input_filename ) ) {
-    case dipha::file_types::WEIGHTED_CUBICAL_COMPLEX:
+    case dipha::file_types::IMAGE_DATA:
         if( upper_dim != std::numeric_limits< int64_t >::max( ) || upper_value != std::numeric_limits< double >::max() ) {
-            dipha::mpi_utils::error_printer_if_root( ) << "upper_dim / upper_value not supported for this input type WEIGHTED_CUBICAL_COMPLEX" << std::endl;
+            dipha::mpi_utils::error_printer_if_root( ) << "upper_dim / upper_value not supported for this input type IMAGE_DATA" << std::endl;
             MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
         }
         create_phat_filtration< dipha::inputs::weighted_cubical_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
         break;
-    case dipha::file_types::WEIGHTED_EXPLICIT_COMPLEX:
+    case dipha::file_types::WEIGHTED_BOUNDARY_MATRIX:
         if( upper_dim != std::numeric_limits< int64_t >::max( ) || upper_value != std::numeric_limits< double >::max( ) ) {
-            dipha::mpi_utils::error_printer_if_root( ) << "upper_dim / upper_value not supported for this input type WEIGHTED_EXPLICIT_COMPLEX" << std::endl;
+            dipha::mpi_utils::error_printer_if_root( ) << "upper_dim / upper_value not supported for this input type WEIGHTED_BOUNDARY_MATRIX" << std::endl;
             MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
         }
         create_phat_filtration< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
