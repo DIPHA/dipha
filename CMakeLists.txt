@@ -63,6 +63,9 @@ target_link_libraries(dipha ${MPI_LIBRARIES})
 add_executable (dualize src/dualize.cpp)
 target_link_libraries(dualize ${MPI_LIBRARIES})
 
+add_executable (create_phat_filtration src/create_phat_filtration.cpp)
+target_link_libraries(create_phat_filtration ${MPI_LIBRARIES})
+
 source_group(Header\ Files FILES ${dipha_general_includes})
 source_group(Header\ Files\\inputs FILES ${dipha_input_includes})
 source_group(Header\ Files\\outputs FILES ${dipha_output_includes})
