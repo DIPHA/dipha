@@ -26,9 +26,15 @@ function filename = create_sphere( num_points, dimension )
     %RandStream.setDefaultStream(RandStream('mt19937ar','seed',sum(100*clock)));
     
     %% create actual data
-    random_points = rand( dimension, num_points ) - 0.5;
-    normalization_factor = 1 ./ sqrt( sum( random_points.^2 ) );
-    points = random_points .* repmat( normalization_factor, dimension, 1 );
+    points = zeros( dimension, num_points );
+    cur_num_points = 0;
+    while cur_num_points < num_points
+        random_point = 2 * (rand( dimension, 1 ) - 0.5 );
+        if norm(random_point) < 1
+            cur_num_points = cur_num_points + 1;
+            points(:, cur_num_points) = random_point ./ norm( random_point );
+        end
+    end 
     
     %% compute distance matrix
     distance_matrix = zeros( num_points );
