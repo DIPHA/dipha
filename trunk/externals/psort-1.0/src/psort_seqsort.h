@@ -51,7 +51,7 @@ namespace p_sort {
     }
 
     char *real_description () {
-      return ("STL sort");
+      return (char*)("STL sort");
     }
   };
 
@@ -64,7 +64,7 @@ namespace p_sort {
     }
 
     char *real_description () {
-      return ("STL stable sort");
+      return (char*)("STL stable sort");
     }
   };
 

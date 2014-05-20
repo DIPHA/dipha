@@ -73,7 +73,7 @@ namespace p_sort {
 		   MPI_valueType, MPI_distanceType, comm);
     
     // Communicate to destination
-    progress (rank, 2, "alltoall");
+    progress (rank, 2, (char*)"alltoall");
     _Distance n_loc = last - first;
     _ValueType *trans_data = new _ValueType[n_loc];
     //_Distance boundaries[nproc+1];
@@ -96,7 +96,7 @@ namespace p_sort {
     delete [] boundaries;
 
     // Finish    
-    progress (rank, 4, "finish");
+    progress (rank, 4, (char*)"finish");
 
     return;
   }
