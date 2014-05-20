@@ -28,7 +28,7 @@ void print_help_and_exit()
     std::cerr << "--help    --  prints this screen" << std::endl;
     std::cerr << "--dual    --  use dualization" << std::endl;
     std::cerr << "--upper_dim N   --  maximal dimension to compute" << std::endl;
-    std::cerr << "--upper_dim X   --  maximal value to compute" << std::endl;
+    std::cerr << "--upper_value X   --  maximal value to compute" << std::endl;
     std::cerr << "--benchmark --  prints timing info" << std::endl;
     MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
 }
