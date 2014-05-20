@@ -55,7 +55,7 @@ namespace p_sort {
     class MedianSplit : public Split<MedianSplit> {
     public:
         char *real_description() {
-            return ( "Median splitter" );
+	  return (char*) ( "Median splitter" );
         }
 
         template<typename _RandomAccessIter, typename _Compare, typename _Distance>

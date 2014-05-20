@@ -49,7 +49,7 @@ namespace p_sort {
   class FlatMerge : public Merge<FlatMerge> {
   public:
     char *real_description () {
-      return ("Flat merge");
+      return (char*)("Flat merge");
     };
 
     template<typename _ValueType, typename _Compare, typename _Distance>
@@ -77,7 +77,7 @@ namespace p_sort {
   class TreeMerge : public Merge<TreeMerge> {
   public:
     char *real_description () {
-      return ("Tree merge");
+      return (char*)("Tree merge");
     };
 
     template<typename _ValueType, typename _Compare, typename _Distance>
@@ -111,7 +111,7 @@ namespace p_sort {
   class OOPTreeMerge : public Merge<OOPTreeMerge> {
   public:
     char *real_description () {
-      return ("Out-of-place tree merge");
+      return (char*)("Out-of-place tree merge");
     };
 
 
@@ -182,7 +182,7 @@ namespace p_sort {
   class FunnelMerge2 : public Merge<FunnelMerge2> {
   public:
     char *real_description () {
-      return ("Funnel(2) merge");
+      return (char*)("Funnel(2) merge");
     };
 
     template<typename _RandomAccessIter, typename _Compare, typename _Distance>
@@ -207,7 +207,7 @@ namespace p_sort {
   class FunnelMerge4 : public Merge<FunnelMerge4> {
   public:
     char *real_description () {
-      return ("Funnel(4) merge");
+      return (char*)("Funnel(4) merge");
     };
 
     template<typename _RandomAccessIter, typename _Compare, typename _Distance>
