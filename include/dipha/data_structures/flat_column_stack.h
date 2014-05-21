@@ -40,16 +40,17 @@ namespace dipha {
                     stack_data.shrink_to_fit();
             }
 
-            void push( int64_t index, const std::vector< int64_t >& col )
+            void push( int64_t index, const heap_column& col )
             {
                 stack_data.push_back( index );
                 stack_data.insert( stack_data.end(), col.begin(), col.end() );
                 stack_data.push_back( col.size() );
             }
 
-            void pop( int64_t& index, std::vector< int64_t >& col )
+            void pop( int64_t& index, heap_column& col )
             {
                 const int64_t col_size = stack_data.back();
+                col.clear();
                 col.resize( col_size );
                 std::copy( stack_data.rbegin() + 1, stack_data.rbegin() + 1 + col_size, col.rbegin() );
                 index = stack_data[ stack_data.size() - 2 - col_size ];

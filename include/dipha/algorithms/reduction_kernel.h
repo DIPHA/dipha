@@ -32,8 +32,7 @@ namespace dipha {
             const int num_processes = mpi_utils::get_num_processes();
             const int rank = mpi_utils::get_rank();
 
-            std::vector< int64_t > col;
-            std::vector< int64_t > temp_col;
+            data_structures::heap_column col;
             for( int round = 0; round < num_processes - rank; round++ ) {
                 data_structures::flat_column_stack temp_columns;
                 while( !unreduced_columns.empty() ) {
@@ -44,69 +43,15 @@ namespace dipha {
                     if( round == 0 && !reduced_columns.empty( index ) )
                         col.clear();
 
-                    int64_t maximal_index = col.empty() ? -1 : col.front();
-
-                    //// std::set column:
-                    //if( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {
-                    //    std::set< int64_t > pivot_col( col.begin( ), col.end( ) );
-                    //    while( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {
-                    //        for( auto it = reduced_columns.begin( maximal_index ); it != reduced_columns.end( maximal_index ); it++ ) {
-                    //            std::pair< std::set< int64_t >::iterator, bool > result = pivot_col.insert( *it );
-                    //            if( result.second == false )
-                    //                pivot_col.erase( result.first );
-                    //        }
-                    //        maximal_index = pivot_col.empty( ) ? -1 : *pivot_col.rbegin( );
-                    //    }
-                    //    
-                    //    col.assign( pivot_col.begin( ), pivot_col.end( ) );
-                    //    max_col_size = col.size( ) > max_col_size ? col.size() : max_col_size;
-                    //    std::make_heap( col.begin( ), col.end( ) );
-                    //}
+                    int64_t maximal_index = col.get_max_index();
 
                     // (partially) reduce col using reduced_columns
                     if( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {  
                         while( maximal_index >= local_begin && !reduced_columns.empty( maximal_index ) ) {                         
-
-                            // add column
-                            for( auto it = reduced_columns.begin( maximal_index ) + 1; it != reduced_columns.end( maximal_index ); it++ ) {
-                                col.push_back( *it );
-                                std::push_heap( col.begin(), col.end() );
-                            }
-
-                            // update maximal index
-                            do {
-                                std::pop_heap( col.begin(), col.end() );
-                                col.pop_back();
-                                if( col.empty() )
-                                    maximal_index = -1;
-                                else {
-                                    maximal_index = col.front();
-                                    std::pop_heap( col.begin( ), col.end( ) );
-                                    col.pop_back( );
-                                }
-                            } while( !col.empty() && col.front() == maximal_index );
-
-                            if( maximal_index != -1 ) {
-                                col.push_back( maximal_index );
-                                std::push_heap( col.begin( ), col.end( ) );
-                            }
+                            col.add_column( reduced_columns.begin( maximal_index ), reduced_columns.end( maximal_index ) );
+                            maximal_index = col.get_max_index();
                         }
-
-                        // remove entries that appear an even number of times
-                        temp_col.clear( );
-                        while( !col.empty( ) ) {
-                            int64_t cur_value = col.front( );
-                            temp_col.push_back( cur_value );
-                            std::pop_heap( col.begin( ), col.end( ) );
-                            col.pop_back( );
-                            if( !col.empty( ) && cur_value == col.front( ) ) {
-                                temp_col.pop_back( );
-                                std::pop_heap( col.begin( ), col.end( ) );
-                                col.pop_back( );
-                            }
-                        }
-                        std::make_heap( temp_col.begin( ), temp_col.end( ) );
-                        temp_col.swap( col );
+                        col.prune();
                     }
                     
                     if( !col.empty() ) {

@@ -85,7 +85,7 @@ void create_phat_filtration( const std::string& input_filename, bool dualize, in
     for( int64_t cur_dim = 0; cur_dim <= complex.get_max_dim(); cur_dim++ ) {
         dipha::data_structures::flat_column_stack unreduced_columns;
         dipha::algorithms::generate_unreduced_columns( complex, filtration_to_cell_map, cell_to_filtration_map, cur_dim, dualize, unreduced_columns );
-        std::vector< int64_t > col;
+        dipha::data_structures::heap_column col;
         while( !unreduced_columns.empty( ) ) {
             int64_t index;
             unreduced_columns.pop( index, col );

@@ -42,7 +42,7 @@ namespace dipha {
             std::vector< int64_t > dim_answers;
             std::vector< int64_t > cell_to_filtration_map_queries;
             std::vector< int64_t > cell_to_filtration_map_answers;
-            std::vector< int64_t > boundary;
+            data_structures::heap_column boundary;
             std::vector< int64_t > boundary_queries;
             data_structures::write_once_array_of_arrays< int64_t > boundary_answers;
             for( int64_t chunk_idx = 0; chunk_idx < num_chunks; chunk_idx++ ) {
