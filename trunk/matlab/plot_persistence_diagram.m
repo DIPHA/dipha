@@ -61,6 +61,8 @@ function plot_persistence_diagram( filename, persistence_threshold )
     safe_max = max_value + 10 * eps( max_value );
     axis square  
     axis( [safe_min, safe_max, safe_min, safe_max] );
+    xticks = get(gca,'XTick');
+    set(gca,'YTick',xticks);
 
     
     %% draw legend
