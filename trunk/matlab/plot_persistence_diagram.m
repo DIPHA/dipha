@@ -37,7 +37,7 @@ function plot_persistence_diagram( filename, persistence_threshold )
     ordinaries = ~essentials;
     
     %% draw parameters
-    cur_colormap = jet( max( dims ) + 1 );
+    cur_colormap = lines( max( dims ) + 1 );
     colormap( cur_colormap );
     marker_size = 50;
     
