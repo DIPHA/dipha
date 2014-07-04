@@ -34,20 +34,21 @@ function plot_persistence_diagram( filename, persistence_threshold )
 
     %% classify points in diagram     
     essentials = (dims < 0);
-    non_essentials = ~essentials;
+    ordinaries = ~essentials;
     
     %% draw parameters
-    colormap( jet( 13 ) );
+    cur_colormap = jet( max( dims ) + 1 );
+    colormap( cur_colormap );
     marker_size = 50;
     
     %% draw essential points
-    scatter( births( essentials ), deaths( essentials ), marker_size, -dims( essentials ) - 1, ...
+    scatter( births( essentials ), deaths( essentials ), marker_size, cur_colormap(-dims( essentials ) - 1 + 1,:), ...
              'filled', 'MarkerEdgeColor','k', 'Marker', 's' );
          
     %% draw non essential points
     hold on
-    scatter( births( non_essentials ), deaths( non_essentials ), marker_size, ...
-             dims( non_essentials ), 'filled', 'MarkerEdgeColor','k', 'Marker', 'o' );
+    scatter( births( ordinaries ), deaths( ordinaries ), marker_size, cur_colormap(dims( ordinaries ) + 1,:), ...
+             'filled', 'MarkerEdgeColor','k', 'Marker', 'o' );
     hold off
     
     %% draw diagonal
@@ -58,6 +59,24 @@ function plot_persistence_diagram( filename, persistence_threshold )
     %% draw axis
     safe_min = min_value - 10 * eps( min_value );
     safe_max = max_value + 10 * eps( max_value );
+    axis square  
     axis( [safe_min, safe_max, safe_min, safe_max] );
-    axis vis3d  
+
+    
+    %% draw legend
+    legend('Essential','Ordinary','Location','SouthEast');
+    
+    %% draw axis labels
+    xlabel('Birth');
+    ylabel('Death');
+
+    %% draw colobar
+    caxis([0 max(dims)])
+    ylabel(colorbar('YTick',0:1:max(dims)), 'Dimension');
+    
+    %% draw title
+    set( title(['Data: ' filename]), 'Interpreter', 'none' );
+    
+    %% draw grid
+    grid on;
 end
