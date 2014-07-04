@@ -37,7 +37,7 @@ function plot_midlife_persistence_diagram( filename, persistence_threshold )
     ordinaries = ~essentials;
     
     %% draw parameters
-    cur_colormap = jet( max( dims ) + 1 );
+    cur_colormap = lines( max( dims ) + 1 );
     colormap( cur_colormap );
     marker_size = 50;
     
@@ -66,11 +66,11 @@ function plot_midlife_persistence_diagram( filename, persistence_threshold )
     set(gca,'YTick',xticks);
 
     %% draw legend
-    legend('Essential','Ordinary','Location','SouthEast');
+    legend('Essential','Ordinary','Location','NorthEastOutside');
     
     %% draw axis labels
-    xlabel('Midlife time');
-    ylabel('Max age');
+    xlabel('Midlife: (birth + death) / 2');
+    ylabel('Age: death - birth');
 
     %% draw colobar
     caxis([0 max(dims)])
