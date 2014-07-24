@@ -183,8 +183,8 @@ namespace dipha {
                     double value = get_local_value( idx );
                     local_max_value = value > local_max_value ? value : local_max_value;
                 }
-                std::vector< double > max_value_per_rank( mpi_utils::get_num_processes( ) );
-                MPI_Allgather( &local_max_value, 1, MPI_DOUBLE, max_value_per_rank.data( ), 1, MPI_DOUBLE, MPI_COMM_WORLD );
+                std::vector< double > max_value_per_rank;
+                mpi_utils::all_gather( local_max_value, max_value_per_rank );
                 return *std::max_element( max_value_per_rank.begin( ), max_value_per_rank.end( ) );
             }
 
