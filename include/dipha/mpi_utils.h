@@ -112,6 +112,13 @@ namespace dipha {
         }
 
         template< typename T >
+        void all_gather( const T& data, std::vector< T >& gathered_data )
+        {
+            gathered_data.resize( mpi_utils::get_num_processes() );
+            MPI_Allgather( (void*)&data, sizeof( T ), MPI_BYTE, gathered_data.data( ), sizeof( T ), MPI_BYTE, MPI_COMM_WORLD );
+        }
+
+        template< typename T >
         void file_read_at_vector( const MPI_File& file,
                                   const MPI_Offset& offset,
                                   int64_t size,

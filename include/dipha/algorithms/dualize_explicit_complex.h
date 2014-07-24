@@ -119,8 +119,8 @@ namespace dipha {
                 std::sort( new_idx_pairs.begin(), new_idx_pairs.end() );
 
                 int64_t local_num_pairs = new_idx_pairs.size();
-                std::vector< int64_t > local_num_pairs_per_rank( mpi_utils::get_num_processes() );
-                MPI_Allgather( &local_num_pairs, 1, MPI_LONG_LONG, local_num_pairs_per_rank.data(), 1, MPI_LONG_LONG, MPI_COMM_WORLD );
+                std::vector< int64_t > local_num_pairs_per_rank;
+                mpi_utils::all_gather( local_num_pairs, local_num_pairs_per_rank );
                 std::vector< int64_t > cum_sum_local_num_pairs( mpi_utils::get_num_processes() + 1 );
                 cum_sum_local_num_pairs.front() = 0;
                 std::partial_sum( local_num_pairs_per_rank.begin(), local_num_pairs_per_rank.end(), cum_sum_local_num_pairs.begin() + 1 );
