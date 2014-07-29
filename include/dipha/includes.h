@@ -25,6 +25,7 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 #include <vector>
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <iomanip>
 #include <cstdlib>

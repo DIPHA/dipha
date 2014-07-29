@@ -170,6 +170,8 @@ namespace dipha {
             void _compute_sparse_indices()
             {
 
+	      //std::cout << "Compute sparse_indices.." << std::flush;
+
                 std::vector<std::vector<int64_t> > full_indices_to_handle_per_dimension;
                 full_indices_to_handle_per_dimension.resize( _m_upper_dim + 1 );
 
@@ -366,6 +368,7 @@ namespace dipha {
                         }
                         */
 
+		//std::cout << "done" << std::endl;
 
             }
 
@@ -479,7 +482,11 @@ namespace dipha {
                 // process queries (This is a two step approach)
 
                 // first, we compute which full indices are needed at all
-                std::map< int64_t, int64_t > full_to_sparse_indices_in_co_boundary;
+#if 1
+                std::unordered_map< int64_t, int64_t > full_to_sparse_indices_in_co_boundary;
+#else
+		std::map< int64_t, int64_t > full_to_sparse_indices_in_co_boundary;
+#endif
                 std::vector< int64_t > boundary;
                 for( int source = 0; source < num_processes; source++ ) {
                     for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size(); idx++ ) {
@@ -636,6 +643,7 @@ namespace dipha {
                         }
                         std::cout << std::endl;
                         */
+
             }
 
             void _get_local_boundary_full_index( int64_t idx, std::vector< int64_t >& boundary ) const
