@@ -60,7 +60,7 @@ namespace dipha {
             {
                 // read preamble
                 std::vector< int64_t > preamble;
-                mpi_utils::file_read_at_vector( file, 0, 4, preamble );
+                mpi_utils::file_read_at_vector( file, 0, 3, preamble );
 
                 _m_no_points = preamble[ 2 ];
                 
@@ -71,17 +71,12 @@ namespace dipha {
                     _m_upper_dim = upper_dim;
                 }
 
-                _m_threshold = upper_value;
+                _m_threshold = 2 * upper_value;
 
-                if( preamble[ 1 ] == 7 )
-                    _m_threshold = 2 * upper_value;
-
-                int64_t matrix_size = _m_no_points*_m_no_points;
+                int64_t matrix_size = _m_no_points * _m_no_points;
 
                 std::vector< double > distances;
-                MPI_Offset offset = preamble.size( ) * sizeof(int64_t) + sizeof( double );
-                if( preamble[1] == 7)
-                    offset = 3 * sizeof(int64_t);
+                MPI_Offset offset = preamble.size( ) * sizeof(int64_t);
                 mpi_utils::file_read_at_vector( file, offset, matrix_size, distances );
 
 
@@ -91,7 +86,7 @@ namespace dipha {
                 }
 
                 for( int64_t i = 0; i < matrix_size; i++ ) {
-                    _m_distance_matrix[ i / _m_no_points ][ i%_m_no_points ] = distances[ i ];
+                    _m_distance_matrix[ i / _m_no_points ][ i % _m_no_points ] = distances[ i ];
                 }
 
                 _precompute_binomials();
