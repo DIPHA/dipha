@@ -1,0 +1,111 @@
+=DIPHA (A Distributed Persistent Homology Algorithm), v2.1.0=
+Copyright 2014 IST Austria
+==Project Founder:== 
+
+Jan Reininghaus (Email: jan.reininghaus@gmail.com)
+
+
+==Contributors:== 
+
+Ulrich Bauer, Michael Kerber
+
+
+==Description:==
+
+This C++ software package computes persistent homology in a distributed setting following the algorithm proposed in `[`[http://dx.doi.org/10.1137/1.9781611973198.4 1]`]`. For an introduction to persistent homology, see the textbook `[`[http://www.ams.org/bookstore-getitem/item=mbk-69 2]`]`. 
+
+There are three types of input that are currently supported by {{{DIPHA}}}:
+
+  # d-dimensional gray-scale image data. The data is internally interpreted as a weighted cubical cell complex and its lower-star filtration is used for the subsequent persistence computation. This approach is described in detail in `[`[http://link.springer.com/chapter/10.1007%2F978-3-642-23175-9_7 3]`]`.
+  # distance matrix data. The data is internally interpreted as a Rips complex of as many points as there are columns in the given matrix. The distance between any two points is then defined by the input data.
+  # weighted regular cell complexes in (co-)boundary matrix form. This (fallback) input type allows the computation of persistent homology of e.g. alpha shapes, rips complexes, or witness complexes. The user is responsible for making sure that the weights of the cells induce a filtration of the complex. 
+The output produced by {{{DIPHA}}} consists of the persistence diagram. Each point in the diagram is defined by the dimension of the homological feature that it represents and the corresponding birth- and death value. 
+
+Input and output is realized using binary files whose format is specified below. {{{DIPHA}}} includes {{{MATLAB}}} functions to create the input files and visualize the output.
+
+To achieve good performance {{{DIPHA}}} supports dualized computation as described in `[`[http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.225.5421 4]`]`, makes use of the optimization introduced in `[`[http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.224.6560 5]`]` and employs an efficient data structure developed in the [http://phat.googlecode.com/ PHAT] project.
+
+==Setup:==
+
+Prerequisites:
+  * A modern C++ compiler like [http://gcc.gnu.org/ GCC] 4.7, [http://clang.llvm.org/ Clang] 3.3, or [http://www.microsoft.com/en-us/download/details.aspx?id=34673 Visual Studio] 2012. {{{DIPHA}}} uses some C++11 features, so older compilers are not supported. If you are using Visual Studio 2013 you need to additionally install Visual Studio 2012.
+  * An {{{MPI}}} implementation like [http://www.open-mpi.org/ Open MPI]  or [http://www.mpich.org/ MPICH2]. Other MPI implementations may also work, but are untested.
+  * the cross-platform, open-source build system [http://www.cmake.org/ CMake], version 2.8 or later
+
+To compile {{{DIPHA}}}:
+  # use CMake to create a build environment. If you are using Visual Studio 2013 you need to run CMake twice.
+  # compile {{{DIPHA}}} using your favorite C++ compiler.
+
+==Usage:==
+
+To run {{{DIPHA}}} using a single process:
+{{{
+dipha [options] input_filename output_filename
+}}}
+where the available {{{options}}} are:
+  * {{{--benchmark}}}: prints some profiling information.
+  * {{{--dual}}}: runs the dualized version of the algorithm, which dramatically improves the running time in some cases.
+  * {{{--upper_dim D}}}: restricts the computation to the first {{{D}}} dimensions of the input complex. This option is mandatory when dealing with distance matrix data.
+  * {{{--upper_value X}}}: computes the persistence diagram only up to value {{{X}}}. This option is crucial when computing persistence of large distance matrices.
+
+To run {{{DIPHA}}} with N processes using {{{MPI}}}:
+{{{
+mpiexec -n N dipha [options] input_filename output_filename
+}}}
+
+==File Formats:==
+
+All file formats in {{{DIPHA}}} are in little-endian binary format. Integral values are stored using the binary representation of 64bit signed integers, while floating point values are stored in IEEE 754 double-precision binary floating-point format.
+
+The first symbol in every {{{DIPHA}}} file is the magic number 8067171840. The second symbol is the integer encoding the actual file type. See {{{dipha/file_types.h}}} for a list of file types and their associated integral identifier. The rest of the symbols in the file depend on the file type:
+
+  * d-dimensional gray-scale image data ({{{IMAGE_DATA}}}):
+    # number of data values {{{n}}} 
+    # dimension {{{d}}} 
+    # lattice resolution: {{{g}}},,1,, ... {{{g}}},,d,, 
+    # floating point data values in x-fastest order: {{{v}}},,1,, ... {{{v}}},,n,, 
+    Example: a gray-scale FullHD frame would have {{{n = 1920 * 1080}}}, {{{d = 2}}}, {{{g}}},,1,, {{{= 1920}}}, {{{g}}},,2,, {{{= 1080}}}, and {{{v}}},,1,, ... {{{v}}},,n,, would be the gray-scale values in scan-line order.
+    A simple {{{MATLAB}}} file writer is included in {{{DIPHA}}} ({{{matlab/save_image_data.m}}}).
+	
+  * weighted regular cell complexes in (co-)boundary matrix form ({{{WEIGHTED_BOUNDARY_MATRIX}}}):
+    # 0 if the file contains the boundaries of the cells, 1 if the file contains the coboundaries 
+    # total number of cells {{{n}}}
+    # dimension of the cell complex {{{d}}}
+    # dimensions of the cells: {{{dim}}},,1,, ... {{{dim}}},,n,,
+    # floating point values of the cells: {{{value}}},,1,, ... {{{value}}},,n,,
+    # offsets of (co-)boundary entries of the cells: {{{offset}}},,1,, ... {{{offset}}},,n,,. Each offset represents the first index of the (co-)boundary in the flattened (co-)boundary matrix.
+    # number of entries in the (co-)boundary matrix m
+    # entries of the flattened (co-)boundary matrix m: {{{entry}}},,1,, ... {{{entry}}},,m,,
+    To convert a file from boundary format (required for primal computation) to coboundary format (required for dual computation), you may use the {{{dualize}}} utility.
+    
+  * distance matrix data ({{{DISTANCE_MATRIX}}})
+    # number of input points {{{n}}} 
+    # floating point values for the distances: {{{d}}},,1,1,, ... {{{d}}},,1,n,, {{{d}}},,2,n,, ... {{{d}}},,n,n,,
+    A simple {{{MATLAB}}} file writer is included in {{{DIPHA}}} ({{{matlab/save_distance_matrix.m}}}).
+
+  * persistence diagram ({{{PERSISTENCE_DIAGRAM}}}):
+    # number of points in the diagram {{{p}}}
+    # dimension, birth, death triples: {{{dim}}},,1,, {{{birth}}},,1,, {{{death}}},,1,, ... {{{dim}}},,p,, {{{birth}}},,p,, {{{death}}},,p,,. Dimensions are stored as integers, while birth and death values are stored as floating point numbers.
+    If {{{dim}}},,k,, is negative, then the corresponding triple represents an essential class of dimension -{{{dim}}},,k,, - 1.
+    A simple {{{MATLAB}}} function to plot persistence diagrams is included in {{{DIPHA}}} ({{{matlab/plot_persistence_diagram.m}}}).
+    
+==Examples:==
+To save space, {{{DIPHA}}} does not come with any example data files. However, there are several {{{MATLAB}}} functions ({{{matlab/create_*.m}}}) that may be used to create synthetic examples for benchmark purposes. For example, to create a 3-dimensional image data set with 32^3^ voxels whose values are given by random numbers you can execute the command
+{{{
+matlab -nojvm -nodisplay -nosplash -r "addpath('../matlab'); create_noise_image_data(3, 32); exit"
+}}}
+in the {{{dipha/examples}}} folder.
+
+To visualize persistence diagrams with a large number of points it is recommended to use the provided {{{MATLAB}}} function that draws a density estimate of the diagram ({{{matlab/plot_persistence_diagram_density.m}}}).
+ 
+==References:==
+`[`[http://dx.doi.org/10.1137/1.9781611973198.4 1]`]` U.Bauer, M.Kerber, J.Reininghaus: _Distributed computation of persistent homology_. Proceedings of the Sixteenth Workshop on Algorithm Engineering and Experiments (ALENEX), 2014.
+
+`[`[http://www.ams.org/bookstore-getitem/item=mbk-69 2]`]` H.Edelsbrunner, J.Harer: _Computational Topology, An Introduction_. American Mathematical Society, 2010, ISBN 0-8218-4925-5.
+
+`[`[http://link.springer.com/chapter/10.1007%2F978-3-642-23175-9_7 3]`]` H.Wagner, C.Chen, E.Vucini: _Efficient Computation of Persistent Homology for Cubical Data_. Topological Methods in Data Analysis and Visualization II, 2012.
+
+`[`[http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.225.5421 4]`]` V.de Silva, D.Morozov, M.Vejdemo-Johansson: _Dualities in persistent (co)homology_. Inverse Problems 27, 2011.
+
+`[`[http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.224.6560 5]`]` C.Chen, M.Kerber: _Persistent Homology Computation With a Twist_. 27th European Workshop on Computational Geometry, 2011.
+  
