@@ -31,16 +31,22 @@ namespace dipha {
             DISTANCE_MATRIX = 7
         };
 
-        inline void assert_dipha_type( const std::string& filename )
+        inline bool is_dipha_file( const std::string& filename )
         {
             MPI_File file = mpi_utils::file_open_read_only( filename );
             int64_t first_int64_t;
             mpi_utils::file_read_at( file, 0, first_int64_t );
-            if( first_int64_t != DIPHA ) {
+            MPI_File_close( &file );
+            return first_int64_t == DIPHA;
+        }
+
+        inline void assert_dipha_type( const std::string& filename )
+        {
+            if( !is_dipha_file( filename ) )
+            {
                 mpi_utils::error_printer_if_root() << filename << " is not a proper DIPHA file (first int64_t does not match magic number)" << std::endl;
                 MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
             }
-            MPI_File_close( &file );
         }
 
         inline file_type get_file_type( const std::string& filename )
