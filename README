@@ -1,4 +1,4 @@
-=DIPHA (A Distributed Persistent Homology Algorithm), v2.0.0=
+=DIPHA (A Distributed Persistent Homology Algorithm), v2.1.0=
 Copyright 2014 IST Austria
 ==Project Founder:== 
 
@@ -9,9 +9,6 @@ Jan Reininghaus (Email: jan.reininghaus@gmail.com)
 
 Ulrich Bauer, Michael Kerber
 
-==Downloads:==
-
-  * [https://docs.google.com/uc?id=0B7Yz6TPEpiGEbnVjZ2tjdmU4ZDQ&export=download DIPHA, v1.0.0]
 
 ==Description:==
 
@@ -83,7 +80,6 @@ The first symbol in every {{{DIPHA}}} file is the magic number 8067171840. The s
     
   * distance matrix data ({{{DISTANCE_MATRIX}}})
     # number of input points {{{n}}} 
-    # dimension of the Rips complex that should be computed {{{k}}}
     # floating point values for the distances: {{{d}}},,1,1,, ... {{{d}}},,1,n,, {{{d}}},,2,n,, ... {{{d}}},,n,n,,
     A simple {{{MATLAB}}} file writer is included in {{{DIPHA}}} ({{{matlab/save_distance_matrix.m}}}).
 
