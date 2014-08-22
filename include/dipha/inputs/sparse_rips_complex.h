@@ -34,6 +34,8 @@ namespace dipha {
 
             std::vector<std::vector<double> > _m_distance_matrix;
 
+	    std::vector<std::vector< int64_t > > _m_coboundary_list;
+
             double _m_threshold;
 
             // derived quantities
@@ -81,12 +83,22 @@ namespace dipha {
 
 
                 _m_distance_matrix.resize( _m_no_points );
+		_m_coboundary_list.resize( _m_no_points );
+
                 for( int64_t i = 0; i < _m_no_points; i++ ) {
                     _m_distance_matrix[ i ].resize( _m_no_points );
                 }
 
                 for( int64_t i = 0; i < matrix_size; i++ ) {
-                    _m_distance_matrix[ i / _m_no_points ][ i % _m_no_points ] = distances[ i ];
+
+		    int64_t row = i / _m_no_points;
+		    int64_t column = i % _m_no_points;
+		    double distance = distances[ i ];
+                    _m_distance_matrix[ row ][ column ] = distance;
+
+		    if(distance <= _m_threshold) {
+   		        _m_coboundary_list[row].push_back(column);
+		    }
                 }
 
                 _precompute_binomials();
@@ -111,6 +123,7 @@ namespace dipha {
                 return _m_breakpoints[ _m_upper_dim + 1 ];
             }
 
+
             // Note: This currently scales very badly with the number of points
             // (TODO: Sparse list representation?)
             // scan_full_column=false means: only look for the coboundaries such that
@@ -133,9 +146,61 @@ namespace dipha {
                 std::vector<int64_t> vertex_indices;
                 conversion( full_idx, std::back_inserter( vertex_indices ) );
 
-                int64_t start_idx_for_scan = scan_full_column ? 0 : vertex_indices.front();
+		int64_t rows_to_check = vertex_indices.size();
 
-                int64_t rows_to_check = vertex_indices.size();
+#if 1
+
+		// Find the index with smallest coboundary
+		auto min_coboundary_it = vertex_indices.begin();
+		
+		for( auto vertex_id_iterator = vertex_indices.begin(); vertex_id_iterator<vertex_indices.end(); vertex_id_iterator++ ) {
+		  if(_m_coboundary_list[*vertex_id_iterator].size() < _m_coboundary_list[*min_coboundary_it].size()) {
+		    min_coboundary_it = vertex_id_iterator;
+		  }
+		}
+		
+		int64_t num_coboundaries_to_check = _m_coboundary_list[*min_coboundary_it].size();
+		//std::cout << *min_coboundary_it << ", there are " << num_coboundaries_to_check << " coboundaries to check" << std::endl;
+		
+		for( int64_t coboundary_candidate_idx = 0; coboundary_candidate_idx < num_coboundaries_to_check; coboundary_candidate_idx++ ) {
+		    
+		    int64_t coboundary_candidate = _m_coboundary_list[*min_coboundary_it][coboundary_candidate_idx];
+		    if( (!scan_full_column) && coboundary_candidate<=vertex_indices.front() ) {
+		      continue;
+		    }
+		    bool makes_a_coboundary = true;
+
+		    for( int row_idx = 0; row_idx < rows_to_check; row_idx++ ) {
+                        int64_t row = vertex_indices[ row_idx ];
+                        if( row == coboundary_candidate || _m_distance_matrix[ row ][ coboundary_candidate ] > _m_threshold ) {
+                            makes_a_coboundary = false;
+                            //std::cout << "Column " << coboundary_candidate << "is not a coboundary for " << full_idx << std::endl;
+                            break;
+                        }
+                    }
+
+                    if( makes_a_coboundary ) {
+		      //std::cout << "New coboundary1: " << coboundary_candidate << " " << vertex_indices.front() << std::endl;
+                        int64_t full_idx_of_new_coboundary;
+                        conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), coboundary_candidate, full_idx_of_new_coboundary );
+                        coboundary.push_back( full_idx_of_new_coboundary );
+                    }
+
+                }
+		/*
+		std::cout << "Full scan? " << scan_full_column << std::endl;
+		std::cout << "Cob 1: ";
+		for(int i=0;i<coboundary.size();i++) {
+		  std::cout << coboundary[i] << " ";
+		} 
+		std::cout << std::endl;
+		*/
+		
+#else
+	    
+		int64_t start_idx_for_scan = scan_full_column ? 0 : vertex_indices.front();
+
+                
 
                 for( int64_t coboundary_candidate = start_idx_for_scan; coboundary_candidate < _m_no_points; coboundary_candidate++ ) {
 
@@ -151,15 +216,22 @@ namespace dipha {
                     }
 
                     if( makes_a_coboundary ) {
-
+		      //std::cout << "New coboundary2: " << coboundary_candidate << " " << vertex_indices.front() << std::endl;
                         int64_t full_idx_of_new_coboundary;
                         conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), coboundary_candidate, full_idx_of_new_coboundary );
                         coboundary.push_back( full_idx_of_new_coboundary );
                     }
 
                 }
+		/*
+		std::cout << "Cob 2: ";
+		for(int i=0;i<coboundary.size();i++) {
+		  std::cout << coboundary[i] << " ";
+		} 
+		std::cout << std::endl;
+		*/
+#endif
             }
-
 
 
             void _compute_sparse_indices()
@@ -659,9 +731,54 @@ namespace dipha {
 
                 idx -= _m_breakpoints[ k ];
 
-                int64_t bcoeff = _m_no_points - 1;
-                for( ; k >= 0; k-- ) {
-                    while( _m_binomials[ bcoeff ][ k + 1 ] > idx ) {
+               
+
+#if 1
+		int64_t bcoeff = _m_no_points;
+
+		for( ; k >= 0; k-- ) {
+		  
+		  int64_t bcoeff2 = bcoeff;
+
+		  auto begin = _m_binomials[ k+1 ].begin();
+		  auto end_of_search = begin;
+		  std::advance(end_of_search, bcoeff);
+		  
+		  auto pos = std::upper_bound( begin, end_of_search, idx);
+
+		  /*
+		  if(pos!=begin) {
+		    pos--;
+		  }
+		  */
+		  pos--;
+		  
+		  bcoeff = std::distance( begin, pos);
+		
+		  /*
+		  {
+		    while( _m_binomials[k + 1][ bcoeff2 ] > idx ) {
+                        bcoeff2--;
+                    }
+		    if(bcoeff!=bcoeff2) {
+		      std::cout << "ARGH " << bcoeff << " " << bcoeff2 << std::endl;
+		      std::cout << "INFO " << idx << " " << *pos << " " << *(pos+1) << std::endl;
+		    }
+		  }
+		  */
+
+		  indices.push_back( bcoeff );
+		  
+                  //std::cout << "bcoeff = " << bcoeff << std::endl;
+
+                  idx -= *pos;
+
+                }
+#else
+		int64_t bcoeff = _m_no_points - 1;
+
+		for( ; k >= 0; k-- ) {
+                    while( _m_binomials[k + 1][ bcoeff ] > idx ) {
                         bcoeff--;
                     }
 
@@ -669,10 +786,12 @@ namespace dipha {
 
                     //std::cout << "bcoeff = " << bcoeff << std::endl;
 
-                    idx -= _m_binomials[ bcoeff ][ k + 1 ];
+                    idx -= _m_binomials[ k + 1 ][ bcoeff ];
 
                     bcoeff--;
                 }
+#endif
+
                 std::vector<int64_t>::iterator it = indices.begin(), it2;
 
                 while( it != indices.end() ) {
@@ -708,7 +827,7 @@ namespace dipha {
             {
                 _m_breakpoints.push_back( 0 );
                 for( int64_t i = 1; i <= _m_upper_dim + 1; i++ ) {
-                    _m_breakpoints.push_back( _m_breakpoints[ i - 1 ] + _m_binomials[ _m_no_points ][ i ] );
+                    _m_breakpoints.push_back( _m_breakpoints[ i - 1 ] + _m_binomials[i][ _m_no_points ] );
                 }
                 /*
                 std::cout << "---" << std::endl;
@@ -722,9 +841,9 @@ namespace dipha {
 
             void _precompute_binomials()
             {
-                for( int64_t i = 0; i <= _m_no_points; i++ ) {
+	      for( int64_t j = 0; j <= _m_upper_dim + 1; j++ ) {                
                     std::vector<int64_t> binom_row;
-                    for( int64_t j = 0; j <= _m_upper_dim + 1; j++ ) {
+		    for( int64_t i = 0; i <= _m_no_points; i++ ) {                
                         binom_row.push_back( binom( i, j ) );
                     }
                     _m_binomials.push_back( binom_row );
@@ -760,11 +879,11 @@ namespace dipha {
                 idx -= _m_breakpoints[ k ];
                 int64_t bcoeff = _m_no_points - 1;
                 for( ; k >= 0; k-- ) {
-                    while( _m_binomials[ bcoeff ][ k + 1 ] > idx ) {
+                    while( _m_binomials[k+1][ bcoeff ] > idx ) {
                         bcoeff--;
                     }
                     *out++ = bcoeff;
-                    idx -= _m_binomials[ bcoeff ][ k + 1 ];
+                    idx -= _m_binomials[k+1][ bcoeff ];
                     bcoeff--;
                 }
                 return out;
@@ -807,7 +926,7 @@ namespace dipha {
                     if( it == skip ) {
                         it++;
                     }
-                    ind += _m_binomials[ *it++ ][ k ];
+                    ind += _m_binomials[k][ *it++ ];
                 }
                 ind += _m_breakpoints[ dist - 1 ];
                 return ind;
@@ -824,10 +943,10 @@ namespace dipha {
                 bool handled_extra = false;
                 for( int64_t k = dist + 1; k >= 1; k-- ) {
                     if( !handled_extra && ( it == end || extra > *it ) ) {
-                        ind += _m_binomials[ extra ][ k ];
+                        ind += _m_binomials[k][ extra ];
                         handled_extra = true;
                     } else {
-                        ind += _m_binomials[ *it++ ][ k ];
+                        ind += _m_binomials[k][ *it++ ];
                     }
                 }
                 ind += _m_breakpoints[ dist ];
