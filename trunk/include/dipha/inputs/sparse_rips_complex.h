@@ -768,8 +768,14 @@ namespace dipha {
 		  */
 
 		  indices.push_back( bcoeff );
+
+		  /*
+		  double guess_d = (k/2.718)*pow(idx,1./k);
 		  
-                  //std::cout << "bcoeff = " << bcoeff << std::endl;
+		  int64_t guess = (int64_t)ceil(guess_d);
+		  
+                  std::cout << "bcoeff = " << bcoeff << ", guess is " << guess << std::endl;
+		  */
 
                   idx -= *pos;
 
@@ -877,16 +883,44 @@ namespace dipha {
             {
                 int64_t k = _get_local_dim_full_index( idx );
                 idx -= _m_breakpoints[ k ];
-                int64_t bcoeff = _m_no_points - 1;
-                for( ; k >= 0; k-- ) {
-                    while( _m_binomials[k+1][ bcoeff ] > idx ) {
+
+#if 1
+		int64_t bcoeff = _m_no_points;
+
+		for( ; k >= 0; k-- ) {
+		  
+		  auto begin = _m_binomials[ k+1 ].begin();
+		  auto end_of_search = begin;
+		  std::advance(end_of_search, bcoeff);
+		  
+		  auto pos = std::upper_bound( begin, end_of_search, idx);
+		  pos--;
+		  
+		  bcoeff = std::distance( begin, pos);
+		
+		  *out++ = bcoeff;
+
+                  idx -= *pos;
+
+                }
+#else
+		int64_t bcoeff = _m_no_points - 1;
+
+		for( ; k >= 0; k-- ) {
+                    while( _m_binomials[k + 1][ bcoeff ] > idx ) {
                         bcoeff--;
                     }
+
                     *out++ = bcoeff;
-                    idx -= _m_binomials[k+1][ bcoeff ];
+
+                    //std::cout << "bcoeff = " << bcoeff << std::endl;
+
+                    idx -= _m_binomials[ k + 1 ][ bcoeff ];
+
                     bcoeff--;
                 }
-                return out;
+#endif
+
             }
 
 
