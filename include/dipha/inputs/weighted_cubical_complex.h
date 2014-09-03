@@ -127,8 +127,7 @@ namespace dipha {
             // Loads the weighted_cubical_complex from given file in binary format -- all symbols are 64 bit wide
             // Format: file_types::DIPHA % file_types::IMAGE_DATA % num_vertices % max_dim % lattice_resolution_1 % ... % lattice_resolution_dim % value_1 % ... % value_num_vertices
             void _load_binary( MPI_File file,
-                               int64_t upper_dim = std::numeric_limits< int64_t >::max( ),
-                               double upper_value = std::numeric_limits< double >::max( ) )
+                               int64_t upper_dim = std::numeric_limits< int64_t >::max( ) )
             {
                 // read preamble
                 std::vector< int64_t > preamble;

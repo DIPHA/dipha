@@ -55,10 +55,6 @@ namespace dipha {
 
 	    Compare_1st compare_1st;
 
-	    // These can go when we remove the full matrix format
-	    double _m_threshold;
-            std::vector<std::vector<double> > _m_distance_matrix;
-
             // derived quantities
         protected:
 
@@ -84,8 +80,8 @@ namespace dipha {
             // Format: magic_number % file_type % num_points % max_dim of complex % values of distance matrix
             // TODO: Complete matrix, or just upper part? For now, I did the whole matrix
             void _load_binary( MPI_File file, 
-                               int64_t upper_dim = std::numeric_limits< int64_t >::max(),
-                               double upper_value = std::numeric_limits< double >::max( ) )
+                               int64_t upper_dim = std::numeric_limits< int64_t >::max() )
+                               
             {
 
                 // read preamble
@@ -101,9 +97,6 @@ namespace dipha {
                 } else {
                     _m_upper_dim = upper_dim;
                 }
-
-
-		if(preamble[1]==dipha::file_types::SPARSE_DISTANCE_MATRIX) {
 
 		std::vector<int64_t> size_of_distance_rows;
 		MPI_Offset offset = preamble.size( ) * sizeof(int64_t);
@@ -135,36 +128,6 @@ namespace dipha {
 		}
 
 
-		} else {
-
-                _m_threshold = 2 * upper_value;
-
-		int64_t matrix_size = _m_no_points * _m_no_points;
-
-                std::vector< double > distances;
-                MPI_Offset offset = preamble.size( ) * sizeof(int64_t);
-                mpi_utils::file_read_at_vector( file, offset, matrix_size, distances );
-
-
-                _m_distance_matrix.resize( _m_no_points );
-		_m_coboundary_list.resize( _m_no_points );
-
-                for( int64_t i = 0; i < _m_no_points; i++ ) {
-                    _m_distance_matrix[ i ].resize( _m_no_points );
-                }
-
-                for( int64_t i = 0; i < matrix_size; i++ ) {
-
-		    int64_t row = i / _m_no_points;
-		    int64_t column = i % _m_no_points;
-		    double distance = distances[ i ];
-                    _m_distance_matrix[ row ][ column ] = distance;
-
-		    if((row!=column) && (distance <= _m_threshold)) {
-		      _m_coboundary_list[row].push_back(std::make_pair(column,distance));
-		    }
-                }
-		}
 
                 _precompute_binomials();
 
@@ -177,6 +140,21 @@ namespace dipha {
 #endif
 
             }
+
+        public: 
+
+	    std::vector< std::pair<int64_t, double> >::const_iterator row_begin(int64_t idx) const {
+	      return _m_coboundary_list[idx].begin();
+	    }
+
+	    std::vector< std::pair<int64_t, double> >::const_iterator row_end(int64_t idx) const {
+	      return _m_coboundary_list[idx].end();
+	    }
+
+	    int64_t number_of_points() const {
+	      return _m_no_points;
+	    }
+
 
         protected:
 
@@ -217,8 +195,6 @@ namespace dipha {
 
 		int64_t rows_to_check = vertex_indices.size();
 
-#if 1
-
 		std::vector<std::pair<int64_t,double> > coboundary_vertices_1, coboundary_vertices_2;
 		std::vector<std::pair<int64_t,double> >* coboundary_pointer_1, *coboundary_pointer_2, *help;
 		
@@ -242,101 +218,12 @@ namespace dipha {
 		  coboundary_pointer_1=coboundary_pointer_2;
 		  coboundary_pointer_2=help;
 		}
-		//std::cout << "Found " << coboundary_pointer_1->size() << " points in coboundary" << std::endl;
 		for(auto vertex_it = coboundary_pointer_1->begin(); vertex_it!= coboundary_pointer_1->end(); vertex_it++) {
-		  //std::cout << "Handling " << vertex_it->first << std::endl;
-		  //std::cout << "Distance: " << vertex_indices[0] << ", " << vertex_it->first <<": " << _m_distance_matrix[vertex_it->first][vertex_indices[0]] << " " <<  _m_distance_matrix[vertex_indices[0]][vertex_it->first] << " --- " << _m_threshold << std::endl;
 		  int64_t full_idx_of_new_coboundary;
 		  conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), vertex_it->first, full_idx_of_new_coboundary );
 		  coboundary.push_back( full_idx_of_new_coboundary );
 		}
-		//std::cout << "done" << std::endl;
 
-#elif 1
-
-
-		// Find the index with smallest coboundary
-		auto min_coboundary_it = vertex_indices.begin();
-		
-		for( auto vertex_id_iterator = vertex_indices.begin(); vertex_id_iterator<vertex_indices.end(); vertex_id_iterator++ ) {
-		  if(_m_coboundary_list[*vertex_id_iterator].size() < _m_coboundary_list[*min_coboundary_it].size()) {
-		    min_coboundary_it = vertex_id_iterator;
-		  }
-		}
-		
-		int64_t num_coboundaries_to_check = _m_coboundary_list[*min_coboundary_it].size();
-		//std::cout << *min_coboundary_it << ", there are " << num_coboundaries_to_check << " coboundaries to check" << std::endl;
-		
-		for( int64_t coboundary_candidate_idx = 0; coboundary_candidate_idx < num_coboundaries_to_check; coboundary_candidate_idx++ ) {
-		    
-		    int64_t coboundary_candidate = _m_coboundary_list[*min_coboundary_it][coboundary_candidate_idx].first;
-		    if( (!scan_full_column) && coboundary_candidate<=vertex_indices.front() ) {
-		      continue;
-		    }
-		    bool makes_a_coboundary = true;
-
-		    for( int row_idx = 0; row_idx < rows_to_check; row_idx++ ) {
-                        int64_t row = vertex_indices[ row_idx ];
-                        if( row == coboundary_candidate || _m_distance_matrix[ row ][ coboundary_candidate ] > _m_threshold ) {
-                            makes_a_coboundary = false;
-                            //std::cout << "Column " << coboundary_candidate << "is not a coboundary for " << full_idx << std::endl;
-                            break;
-                        }
-                    }
-
-                    if( makes_a_coboundary ) {
-		      //std::cout << "New coboundary1: " << coboundary_candidate << " " << vertex_indices.front() << std::endl;
-                        int64_t full_idx_of_new_coboundary;
-                        conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), coboundary_candidate, full_idx_of_new_coboundary );
-                        coboundary.push_back( full_idx_of_new_coboundary );
-                    }
-
-                }
-		/*
-		std::cout << "Full scan? " << scan_full_column << std::endl;
-		std::cout << "Cob 1: ";
-		for(int i=0;i<coboundary.size();i++) {
-		  std::cout << coboundary[i] << " ";
-		} 
-		std::cout << std::endl;
-		*/
-
-
-#else
-	    
-		int64_t start_idx_for_scan = scan_full_column ? 0 : vertex_indices.front();
-
-                
-
-                for( int64_t coboundary_candidate = start_idx_for_scan; coboundary_candidate < _m_no_points; coboundary_candidate++ ) {
-
-                    bool makes_a_coboundary = true;
-
-                    for( int row_idx = 0; row_idx < rows_to_check; row_idx++ ) {
-                        int64_t row = vertex_indices[ row_idx ];
-                        if( row == coboundary_candidate || _m_distance_matrix[ row ][ coboundary_candidate ] > _m_threshold ) {
-                            makes_a_coboundary = false;
-                            //std::cout << "Column " << coboundary_candidate << "is not a coboundary for " << full_idx << std::endl;
-                            break;
-                        }
-                    }
-
-                    if( makes_a_coboundary ) {
-		      //std::cout << "New coboundary2: " << coboundary_candidate << " " << vertex_indices.front() << std::endl;
-                        int64_t full_idx_of_new_coboundary;
-                        conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), coboundary_candidate, full_idx_of_new_coboundary );
-                        coboundary.push_back( full_idx_of_new_coboundary );
-                    }
-
-                }
-		/*
-		std::cout << "Cob 2: ";
-		for(int i=0;i<coboundary.size();i++) {
-		  std::cout << coboundary[i] << " ";
-		} 
-		std::cout << std::endl;
-		*/
-#endif
             }
 
 
@@ -675,11 +562,8 @@ namespace dipha {
                 // process queries (This is a two step approach)
 
                 // first, we compute which full indices are needed at all
-#if 1
                 std::unordered_map< int64_t, int64_t > full_to_sparse_indices_in_co_boundary;
-#else
-		std::map< int64_t, int64_t > full_to_sparse_indices_in_co_boundary;
-#endif
+
                 std::vector< int64_t > boundary;
                 for( int source = 0; source < num_processes; source++ ) {
                     for( int64_t idx = 0; idx < (int64_t)queries_buffer[ source ].size(); idx++ ) {
@@ -857,9 +741,6 @@ namespace dipha {
 
                 idx -= _m_breakpoints[ k ];
 
-               
-
-#if 1
 		int64_t bcoeff = _m_no_points;
 
 		for( ; k >= 0; k-- ) {
@@ -906,23 +787,6 @@ namespace dipha {
                   idx -= *pos;
 
                 }
-#else
-		int64_t bcoeff = _m_no_points - 1;
-
-		for( ; k >= 0; k-- ) {
-                    while( _m_binomials[k + 1][ bcoeff ] > idx ) {
-                        bcoeff--;
-                    }
-
-                    indices.push_back( bcoeff );
-
-                    //std::cout << "bcoeff = " << bcoeff << std::endl;
-
-                    idx -= _m_binomials[ k + 1 ][ bcoeff ];
-
-                    bcoeff--;
-                }
-#endif
 
                 std::vector<int64_t>::iterator it = indices.begin(), it2;
 
@@ -1010,7 +874,6 @@ namespace dipha {
                 int64_t k = _get_local_dim_full_index( idx );
                 idx -= _m_breakpoints[ k ];
 
-#if 1
 		int64_t bcoeff = _m_no_points;
 
 		for( ; k >= 0; k-- ) {
@@ -1029,23 +892,6 @@ namespace dipha {
                   idx -= *pos;
 
                 }
-#else
-		int64_t bcoeff = _m_no_points - 1;
-
-		for( ; k >= 0; k-- ) {
-                    while( _m_binomials[k + 1][ bcoeff ] > idx ) {
-                        bcoeff--;
-                    }
-
-                    *out++ = bcoeff;
-
-                    //std::cout << "bcoeff = " << bcoeff << std::endl;
-
-                    idx -= _m_binomials[ k + 1 ][ bcoeff ];
-
-                    bcoeff--;
-                }
-#endif
 
             }
 
@@ -1054,7 +900,6 @@ namespace dipha {
             template<typename InputIterator>
             double diameter( InputIterator begin, InputIterator end ) const
             {
-#if 1
 	        if( begin == end ) {
                     return 0.;
                 }
@@ -1086,25 +931,7 @@ namespace dipha {
                 } while( curr != end );
 
 		return max/2;
-#else
 
-                if( begin == end ) {
-                    return 0.;
-                }
-                double max = 0.;
-                InputIterator curr = begin;
-                do {
-                    for( InputIterator run = curr + 1; run != end; run++ ) {
-                        double cdist = _m_distance_matrix[ *curr ][ *run ];
-                        if( cdist > max ) {
-                            max = cdist;
-                        }
-                    }
-                    curr++;
-                } while( curr != end );
-		assert(max <= _m_threshold);
-                return max / 2;
-#endif
             }
 
             // Assumes that [begin,end) is sorted in decreasing order!

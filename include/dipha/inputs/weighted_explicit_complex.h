@@ -62,8 +62,7 @@ namespace dipha {
             // Format: file_types::DIPHA % file_types::WEIGHTED_BOUNDARY_MATRIX % boundary_type % num_cells (N) % max_dim % dim1 % ... 
             //         % dimN % value1 % ... % valueN % offset1 % ... % offsetN % num_entries (M) % entry1 % ... % entryM 
             void _load_binary( MPI_File file,
-                               int64_t upper_dim = std::numeric_limits< int64_t >::max( ),
-                               double upper_value = std::numeric_limits< double >::max( ) )
+                               int64_t upper_dim = std::numeric_limits< int64_t >::max( ) )
             {
                 // read preamble
                 std::vector< int64_t > preamble;

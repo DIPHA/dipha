@@ -21,44 +21,35 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 
 void print_help_and_exit()
 {
-    std::cerr << "Usage: " << "create_phat_filtration [options] input_filename output_filename" << std::endl;
+    std::cerr << "Usage: " << "create_phat_filtration [options] upper_value input_filename output_filename" << std::endl;
     std::cerr << std::endl;
     std::cerr << "Options:" << std::endl;
     std::cerr << std::endl;
     std::cerr << "--help    --  prints this screen" << std::endl;
-    std::cerr << "--upper_value X   --  maximal value to compute" << std::endl;
     std::exit(-1);
 }
 
 void parse_command_line( int argc, char** argv, double& upper_value, std::string& input_filename, std::string& output_filename )
 {
-    if( argc < 2 )
+    if( argc < 3 )
         print_help_and_exit();
 
-    input_filename = argv[ argc - 2 ];
-    output_filename = argv[ argc - 1 ];
+    input_filename = argv[ 2 ];
+    output_filename = argv[ 3 ];
 
-    for( int idx = 1; idx < argc - 2; idx++ ) {
-        const std::string option = argv[ idx ];
-        if( option == "--help" ) {
-            print_help_and_exit( );
-        } else if( option == "--upper_value" ) {
-            idx++;
-            if( idx >= argc - 2 )
-                print_help_and_exit( );
-            std::string parameter = std::string( argv[ idx ] );
-            size_t pos_last_digit;
-            upper_value = std::stod( parameter, &pos_last_digit );
-            if( pos_last_digit != parameter.size( ) )
-                print_help_and_exit( );
-        } else print_help_and_exit( );
-    }
+    std::string parameter = std::string( argv[ 1 ] );
+    size_t pos_last_digit;
+    upper_value = std::stod( parameter, &pos_last_digit );
+    if( pos_last_digit != parameter.size( ) )
+      print_help_and_exit( );
+
 }
+
 
 void create_sparse_representation( const std::string& input_filename, double upper_value, const std::string& output_filename )
 {
     dipha::inputs::full_rips_complex complex;
-    complex.load_binary( input_filename, 1, upper_value );
+    complex.load_binary( input_filename, 1 );
 
     std::vector< std::vector< std::pair<int64_t,double> > > sparse_matrix;
 
