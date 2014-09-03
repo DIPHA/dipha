@@ -66,6 +66,9 @@ target_link_libraries(dualize ${MPI_LIBRARIES})
 add_executable (create_phat_filtration src/create_phat_filtration.cpp)
 target_link_libraries(create_phat_filtration ${MPI_LIBRARIES})
 
+add_executable (full_to_sparse_distance_matrix src/full_to_sparse_distance_matrix.cpp)
+target_link_libraries(full_to_sparse_distance_matrix ${MPI_LIBRARIES})
+
 source_group(Header\ Files FILES ${dipha_general_includes})
 source_group(Header\ Files\\inputs FILES ${dipha_input_includes})
 source_group(Header\ Files\\outputs FILES ${dipha_output_includes})
@@ -125,10 +128,10 @@ REGRESSION_TEST(sphere_3_def 3 ${DEFAULT_UPPER_VALUE} sphere_3_32)
 REGRESSION_TEST(sphere_2_def 2 ${DEFAULT_UPPER_VALUE} sphere_3_32)
 REGRESSION_TEST(sphere_1_def 1 ${DEFAULT_UPPER_VALUE} sphere_3_32)
 
-REGRESSION_TEST(sphere_3_2   3 2   sphere_3_32)  
-REGRESSION_TEST(sphere_3_0.8 3 0.8 sphere_3_32)
-REGRESSION_TEST(sphere_2_0.5 2 0.5 sphere_3_32)
-REGRESSION_TEST(sphere_1_0.3 2 0.3 sphere_3_32)
+REGRESSION_TEST(sphere_3_2   3 ${DEFAULT_UPPER_VALUE} sphere_3_32_2)  
+REGRESSION_TEST(sphere_3_0.8 3 ${DEFAULT_UPPER_VALUE} sphere_3_32_0.8)
+REGRESSION_TEST(sphere_2_0.5 2 ${DEFAULT_UPPER_VALUE} sphere_3_32_0.5)
+REGRESSION_TEST(sphere_1_0.3 2 ${DEFAULT_UPPER_VALUE} sphere_3_32_0.3)
 
 
 add_test(NAME create_dualize
