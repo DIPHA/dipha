@@ -23,25 +23,52 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 
 namespace dipha {
     namespace inputs {
-        class sparse_rips_complex : public abstract_weighted_cell_complex< sparse_rips_complex > {
+
+      class sparse_rips_complex : public abstract_weighted_cell_complex< sparse_rips_complex > {
 
             friend abstract_weighted_cell_complex< sparse_rips_complex >;
+
+	    // Functors needed for internal comparisons
+	    class Compare_1st {
+	      
+	    public:
+	      bool operator() (const std::pair<int64_t,double>& a, const std::pair<int64_t,double>& b) {
+		return a.first<b.first;
+	      }
+	      bool operator() (int64_t a, const std::pair<int64_t,double>& b) {
+		return a<b.first;
+	      }
+	      bool operator() (const std::pair<int64_t,double>& a, int64_t b) {
+		return a.first<b;
+	      }
+	      
+	    };
+
 
             // defining state of the object
         protected:
             int64_t _m_upper_dim;
             int64_t _m_no_points;
 
+
+	    std::vector<std::vector< std::pair<int64_t,double> > > _m_coboundary_list;
+
+	    Compare_1st compare_1st;
+
+	    // These can go when we remove the full matrix format
+	    double _m_threshold;
             std::vector<std::vector<double> > _m_distance_matrix;
-
-	    std::vector<std::vector< int64_t > > _m_coboundary_list;
-
-            double _m_threshold;
 
             // derived quantities
         protected:
 
             std::vector< int64_t > _m_full_indices_in_range;
+
+#define PRECOMPUTE_VALUES 1
+
+#if PRECOMPUTE_VALUES
+	    std::vector< double > _m_values_in_range;
+#endif
 
             std::vector<std::vector<int64_t> > _m_binomials;
 
@@ -60,12 +87,14 @@ namespace dipha {
                                int64_t upper_dim = std::numeric_limits< int64_t >::max(),
                                double upper_value = std::numeric_limits< double >::max( ) )
             {
+
                 // read preamble
                 std::vector< int64_t > preamble;
                 mpi_utils::file_read_at_vector( file, 0, 3, preamble );
 
                 _m_no_points = preamble[ 2 ];
-                
+
+
                 if( upper_dim == std::numeric_limits< int64_t >::max( ) ) {
                     mpi_utils::error_printer_if_root( ) << "No upper_dim specified for distance_matrix data!";
                     MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
@@ -73,9 +102,44 @@ namespace dipha {
                     _m_upper_dim = upper_dim;
                 }
 
+
+		if(preamble[1]==dipha::file_types::SPARSE_DISTANCE_MATRIX) {
+
+		std::vector<int64_t> size_of_distance_rows;
+		MPI_Offset offset = preamble.size( ) * sizeof(int64_t);
+                mpi_utils::file_read_at_vector( file, offset, _m_no_points, size_of_distance_rows );
+
+		int64_t no_entries=0;
+		for(int row=0; row<_m_no_points; row++) {
+		  no_entries+=size_of_distance_rows[row];
+		}
+		offset+=_m_no_points*sizeof(int64_t);
+
+		std::vector<int64_t> list_indices;
+		mpi_utils::file_read_at_vector( file, offset, no_entries, list_indices );
+
+		offset += no_entries*sizeof(int64_t);
+
+		std::vector<double> list_values;
+		mpi_utils::file_read_at_vector( file, offset, no_entries, list_values );
+
+		_m_coboundary_list.resize( _m_no_points );
+
+		int64_t akk = 0;
+		for(int row=0; row<_m_no_points; row++) {
+		  int64_t size_of_curr_list = size_of_distance_rows[row];
+		  for(int entry=0; entry<size_of_curr_list;entry++) {
+		    _m_coboundary_list[row].push_back(std::make_pair(list_indices[akk+entry],list_values[akk+entry]));
+		  }
+		  akk+=size_of_curr_list;
+		}
+
+
+		} else {
+
                 _m_threshold = 2 * upper_value;
 
-                int64_t matrix_size = _m_no_points * _m_no_points;
+		int64_t matrix_size = _m_no_points * _m_no_points;
 
                 std::vector< double > distances;
                 MPI_Offset offset = preamble.size( ) * sizeof(int64_t);
@@ -96,16 +160,21 @@ namespace dipha {
 		    double distance = distances[ i ];
                     _m_distance_matrix[ row ][ column ] = distance;
 
-		    if(distance <= _m_threshold) {
-   		        _m_coboundary_list[row].push_back(column);
+		    if((row!=column) && (distance <= _m_threshold)) {
+		      _m_coboundary_list[row].push_back(std::make_pair(column,distance));
 		    }
                 }
+		}
 
                 _precompute_binomials();
 
                 _precompute_breakpoints();
 
                 _compute_sparse_indices();
+		
+#if PRECOMPUTE_VALUES
+		_precompute_values();
+#endif
 
             }
 
@@ -124,8 +193,8 @@ namespace dipha {
             }
 
 
+
             // Note: This currently scales very badly with the number of points
-            // (TODO: Sparse list representation?)
             // scan_full_column=false means: only look for the coboundaries such that
             // the new vertex has the largest index among all indices
             void _get_local_coboundary_full_index( int64_t full_idx,
@@ -150,6 +219,42 @@ namespace dipha {
 
 #if 1
 
+		std::vector<std::pair<int64_t,double> > coboundary_vertices_1, coboundary_vertices_2;
+		std::vector<std::pair<int64_t,double> >* coboundary_pointer_1, *coboundary_pointer_2, *help;
+		
+		auto start_of_search = scan_full_column ? _m_coboundary_list[vertex_indices[0]].begin() : std::upper_bound(_m_coboundary_list[vertex_indices[0]].begin(), _m_coboundary_list[vertex_indices[0]].end(), vertex_indices[0], compare_1st);
+
+		std::copy(start_of_search, _m_coboundary_list[vertex_indices[0]].end(), std::back_inserter(coboundary_vertices_1));
+
+		//std::cout << "We have " << coboundary_vertices_1.size() << " points initially" << std::endl;
+
+		coboundary_pointer_1 = &coboundary_vertices_1;
+		coboundary_pointer_2 = &coboundary_vertices_2;
+
+		//std::cout << "Start loop.. " << vertex_indices[0] << std::endl;
+		for( int64_t row=1; row<rows_to_check; row++ ) {
+		  //std::cout << "Row " << vertex_indices[row] << std::endl;
+		  coboundary_pointer_2->clear();
+		  std::set_intersection(coboundary_pointer_1->begin(), coboundary_pointer_1->end(),
+					_m_coboundary_list[vertex_indices[row]].begin(), _m_coboundary_list[vertex_indices[row]].end(),
+					std::back_inserter(*coboundary_pointer_2), compare_1st);
+		  help=coboundary_pointer_1;
+		  coboundary_pointer_1=coboundary_pointer_2;
+		  coboundary_pointer_2=help;
+		}
+		//std::cout << "Found " << coboundary_pointer_1->size() << " points in coboundary" << std::endl;
+		for(auto vertex_it = coboundary_pointer_1->begin(); vertex_it!= coboundary_pointer_1->end(); vertex_it++) {
+		  //std::cout << "Handling " << vertex_it->first << std::endl;
+		  //std::cout << "Distance: " << vertex_indices[0] << ", " << vertex_it->first <<": " << _m_distance_matrix[vertex_it->first][vertex_indices[0]] << " " <<  _m_distance_matrix[vertex_indices[0]][vertex_it->first] << " --- " << _m_threshold << std::endl;
+		  int64_t full_idx_of_new_coboundary;
+		  conversion_with_extra_index( vertex_indices.begin(), vertex_indices.end(), vertex_it->first, full_idx_of_new_coboundary );
+		  coboundary.push_back( full_idx_of_new_coboundary );
+		}
+		//std::cout << "done" << std::endl;
+
+#elif 1
+
+
 		// Find the index with smallest coboundary
 		auto min_coboundary_it = vertex_indices.begin();
 		
@@ -164,7 +269,7 @@ namespace dipha {
 		
 		for( int64_t coboundary_candidate_idx = 0; coboundary_candidate_idx < num_coboundaries_to_check; coboundary_candidate_idx++ ) {
 		    
-		    int64_t coboundary_candidate = _m_coboundary_list[*min_coboundary_it][coboundary_candidate_idx];
+		    int64_t coboundary_candidate = _m_coboundary_list[*min_coboundary_it][coboundary_candidate_idx].first;
 		    if( (!scan_full_column) && coboundary_candidate<=vertex_indices.front() ) {
 		      continue;
 		    }
@@ -195,7 +300,8 @@ namespace dipha {
 		} 
 		std::cout << std::endl;
 		*/
-		
+
+
 #else
 	    
 		int64_t start_idx_for_scan = scan_full_column ? 0 : vertex_indices.front();
@@ -439,6 +545,15 @@ namespace dipha {
 
             }
 
+#if PRECOMPUTE_VALUES
+	    void _precompute_values() {
+	      for(auto idx_it = _m_full_indices_in_range.begin(); idx_it != _m_full_indices_in_range.end(); idx_it++) {
+		double dist = _get_local_value_full_index( *idx_it );
+		_m_values_in_range.push_back(dist);
+	      }
+	    }
+#endif
+
             int64_t _get_max_dim() const
             {
                 return _m_upper_dim;
@@ -461,7 +576,7 @@ namespace dipha {
                 return result;
             }
 
-            int64_t get_locally_full_from_sparse_index( int64_t sparse_idx ) const
+	    int64_t get_local_index_from_sparse_index( int64_t sparse_idx ) const
             {
 
                 int process_id = dipha::mpi_utils::get_rank();
@@ -476,8 +591,14 @@ namespace dipha {
                 assert( sparse_idx < dipha::element_distribution::get_local_end( _m_num_elements, process_id ) );
 
                 sparse_idx -= local_begin;
+		return sparse_idx;
+	    }
 
-                return _m_full_indices_in_range[ sparse_idx ];
+            int64_t get_locally_full_from_sparse_index( int64_t sparse_idx ) const
+            {
+
+	        int64_t local_idx = get_local_index_from_sparse_index(sparse_idx);
+                return _m_full_indices_in_range[ local_idx ];
             }
 
             int64_t _get_local_dim( int64_t idx ) const
@@ -497,8 +618,13 @@ namespace dipha {
 
             double _get_local_value( int64_t idx ) const
             {
+#if PRECOMPUTE_VALUES
+	        int64_t local_idx = get_local_index_from_sparse_index(idx);
+                return _m_values_in_range[ local_idx ];  
+#else
                 int64_t full_idx = get_locally_full_from_sparse_index( idx );
                 return _get_local_value_full_index( full_idx );
+#endif
             }
 
 
@@ -928,6 +1054,40 @@ namespace dipha {
             template<typename InputIterator>
             double diameter( InputIterator begin, InputIterator end ) const
             {
+#if 1
+	        if( begin == end ) {
+                    return 0.;
+                }
+                double max = 0.;
+                InputIterator curr = begin;
+                do {
+		    auto list_it = _m_coboundary_list[*curr].end();
+		    /*
+		    std::cout << "Curr index " << *curr << std::endl << "Coboundary: ";
+		    for(auto xit = _m_coboundary_list[*curr].begin(); xit != _m_coboundary_list[*curr].end(); xit++) {
+		      std::cout << "(" << xit->first << ", " << xit->second << ") ";
+		    }
+		    std::cout << std::endl;
+		    */
+                    for( InputIterator run = curr + 1; run != end; run++ ) {
+		      //std::cout << "Looking for " << *run << std::endl;
+		      auto new_list_it = std::lower_bound(_m_coboundary_list[*curr].begin(), list_it, *run, compare_1st);  
+		      if(new_list_it->first != *run) {
+			std::cout << new_list_it->first << " " << *run << std::endl;
+		      }
+		      assert(new_list_it->first == *run);
+			double cdist = new_list_it->second;
+                        if( cdist > max ) {
+                            max = cdist;
+                        }
+			list_it = new_list_it;
+                    }
+                    curr++;
+                } while( curr != end );
+
+		return max/2;
+#else
+
                 if( begin == end ) {
                     return 0.;
                 }
@@ -942,7 +1102,9 @@ namespace dipha {
                     }
                     curr++;
                 } while( curr != end );
+		assert(max <= _m_threshold);
                 return max / 2;
+#endif
             }
 
             // Assumes that [begin,end) is sorted in decreasing order!
