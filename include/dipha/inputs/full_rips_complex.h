@@ -83,6 +83,16 @@ namespace dipha {
                 _precompute_breakpoints();
             }
 
+        public: 
+
+	    double get_distance(int64_t i, int64_t j) const {
+	      return _m_distance_matrix[i][j];
+	    }
+
+	    int64_t number_of_points() const {
+	      return _m_no_points;
+	    }
+
         protected:
 
             int64_t _get_max_dim() const
