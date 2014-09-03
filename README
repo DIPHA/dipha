@@ -83,6 +83,12 @@ The first symbol in every {{{DIPHA}}} file is the magic number 8067171840. The s
     # floating point values for the distances: {{{d}}},,1,1,, ... {{{d}}},,1,n,, {{{d}}},,2,n,, ... {{{d}}},,n,n,,
     A simple {{{MATLAB}}} file writer is included in {{{DIPHA}}} ({{{matlab/save_distance_matrix.m}}}).
 
+  * sparse distance matrix data ({{{SPARSE_DISTANCE_MATRIX}}})
+    # number of input points {{{n}}}
+    # number of connections of each point: {{{c}}},,1,, ... {{{c}}},,n,,
+    # indices of connected vertices: {{{i}}},,1,1,, ... {{{i}}},,1,{{{c1}}} {{{i}}},,2,1 ... {{{i}}},,n,{{{cn}}},,
+    # distance values of connected vertices {{{d}}},,1,1,, ... {{{d}}},,1,{{{c1}}} {{{d}}},,2,1 ... {{{d}}},,n,{{{cn}}},,
+
   * persistence diagram ({{{PERSISTENCE_DIAGRAM}}}):
     # number of points in the diagram {{{p}}}
     # dimension, birth, death triples: {{{dim}}},,1,, {{{birth}}},,1,, {{{death}}},,1,, ... {{{dim}}},,p,, {{{birth}}},,p,, {{{death}}},,p,,. Dimensions are stored as integers, while birth and death values are stored as floating point numbers.
