@@ -27,12 +27,11 @@ void print_help_and_exit()
     std::cerr << std::endl;
     std::cerr << "--help    --  prints this screen" << std::endl;
     std::cerr << "--upper_dim N   --  maximal dimension to compute" << std::endl;
-    std::cerr << "--upper_dim X   --  maximal value to compute" << std::endl;
     std::cerr << "--dual    --  saves the dualized filtation" << std::endl;
     MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
 }
 
-void parse_command_line( int argc, char** argv, bool& dualize, int64_t& upper_dim, double& upper_value, std::string& input_filename, std::string& output_filename )
+void parse_command_line( int argc, char** argv, bool& dualize, int64_t& upper_dim, std::string& input_filename, std::string& output_filename )
 {
     if( argc < 3 )
         print_help_and_exit();
@@ -55,24 +54,15 @@ void parse_command_line( int argc, char** argv, bool& dualize, int64_t& upper_di
             upper_dim = std::stoll( parameter, &pos_last_digit );
             if( pos_last_digit != parameter.size( ) )
                 print_help_and_exit( );
-        } else if( option == "--upper_value" ) {
-            idx++;
-            if( idx >= argc - 2 )
-                print_help_and_exit( );
-            std::string parameter = std::string( argv[ idx ] );
-            size_t pos_last_digit;
-            upper_value = std::stod( parameter, &pos_last_digit );
-            if( pos_last_digit != parameter.size( ) )
-                print_help_and_exit( );
-        } else print_help_and_exit( );
+	} else print_help_and_exit( );
     }
 }
 
 template< typename Complex >
-void create_phat_filtration( const std::string& input_filename, bool dualize, int64_t upper_dim, double upper_value, const std::string& output_filename )
+void create_phat_filtration( const std::string& input_filename, bool dualize, int64_t upper_dim, const std::string& output_filename )
 {
     Complex complex;
-    complex.load_binary( input_filename, upper_dim, upper_value );
+    complex.load_binary( input_filename, upper_dim );
     dipha::data_structures::distributed_vector< int64_t > filtration_to_cell_map;
     dipha::algorithms::get_filtration_to_cell_map( complex, dualize, filtration_to_cell_map );
     dipha::data_structures::distributed_vector< int64_t > cell_to_filtration_map;
@@ -125,29 +115,28 @@ int main( int argc, char** argv )
     std::string output_filename; // name of file that will contain the PHAT filtration
     bool dualize = false; // primal / dual computation toggle
     int64_t upper_dim = std::numeric_limits< int64_t >::max( );
-    double upper_value = std::numeric_limits< double >::max( );
-    parse_command_line( argc, argv, dualize, upper_dim, upper_value, input_filename, output_filename );
+    parse_command_line( argc, argv, dualize, upper_dim, input_filename, output_filename );
 
     switch( dipha::file_types::get_file_type( input_filename ) ) {
     case dipha::file_types::IMAGE_DATA:
-        if( upper_dim != std::numeric_limits< int64_t >::max( ) || upper_value != std::numeric_limits< double >::max() ) {
-            dipha::mpi_utils::error_printer_if_root( ) << "upper_dim / upper_value not supported for this input type IMAGE_DATA" << std::endl;
+        if( upper_dim != std::numeric_limits< int64_t >::max( ) ) {
+            dipha::mpi_utils::error_printer_if_root( ) << "upper_dim not supported for this input type IMAGE_DATA" << std::endl;
             MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
         }
-        create_phat_filtration< dipha::inputs::weighted_cubical_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
+        create_phat_filtration< dipha::inputs::weighted_cubical_complex >( input_filename, dualize, upper_dim, output_filename );
         break;
     case dipha::file_types::WEIGHTED_BOUNDARY_MATRIX:
-        if( upper_dim != std::numeric_limits< int64_t >::max( ) || upper_value != std::numeric_limits< double >::max( ) ) {
-            dipha::mpi_utils::error_printer_if_root( ) << "upper_dim / upper_value not supported for this input type WEIGHTED_BOUNDARY_MATRIX" << std::endl;
+        if( upper_dim != std::numeric_limits< int64_t >::max( ) ) {
+            dipha::mpi_utils::error_printer_if_root( ) << "upper_dim not supported for this input type WEIGHTED_BOUNDARY_MATRIX" << std::endl;
             MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
         }
-        create_phat_filtration< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
+        create_phat_filtration< dipha::inputs::weighted_explicit_complex >( input_filename, dualize, upper_dim, output_filename );
         break;
     case dipha::file_types::DISTANCE_MATRIX:
-        if( upper_value == std::numeric_limits< double >::max( ) )
-            create_phat_filtration< dipha::inputs::full_rips_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
-        else
-            create_phat_filtration< dipha::inputs::sparse_rips_complex >( input_filename, dualize, upper_dim, upper_value, output_filename );
+        create_phat_filtration< dipha::inputs::full_rips_complex >( input_filename, dualize, upper_dim, output_filename );
+        break;
+    case dipha::file_types::SPARSE_DISTANCE_MATRIX:
+        create_phat_filtration< dipha::inputs::sparse_rips_complex >( input_filename, dualize, upper_dim, output_filename );
         break;
     default:
         dipha::mpi_utils::error_printer_if_root( ) << "Unknown complex type in DIPHA file" << input_filename << std::endl;
