@@ -28,7 +28,8 @@ namespace dipha {
             WEIGHTED_BOUNDARY_MATRIX = 0,
             IMAGE_DATA = 1,
             PERSISTENCE_DIAGRAM = 2,
-            DISTANCE_MATRIX = 7
+            DISTANCE_MATRIX = 7,
+	    SPARSE_DISTANCE_MATRIX = 8
         };
 
         inline bool is_dipha_file( const std::string& filename )
