@@ -23,18 +23,6 @@ project("Dipha")
 
 set(CMAKE_BUILD_TYPE "Release")
 
-if(MSVC OR MSVC_IDE)
-    if( MSVC_VERSION LESS 1700 )
-        message(FATAL_ERROR "The project requires C++11 features. " 
-        "You need at least Visual Studio 11 (Microsoft Visual Studio 2012)")
-    endif()        
-    
-    # Compilation using Microsoft Visual Studio 2013 seems to be stuck in an infinite loop ...
-    if( MSVC_VERSION GREATER 1700 )
-        set(CMAKE_GENERATOR_TOOLSET "v110" CACHE STRING "Platform Toolset" FORCE)               
-    endif()
-endif()
-
 if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-std=c++11)
 endif()
@@ -89,9 +77,9 @@ endif()
 
 SET(TEST_DATA_DIR ${CMAKE_HOME_DIRECTORY}/test_data)
 
-macro(REGRESSION_TEST TEST_NAME UPPER_DIM UPPER_VALUE INPUT)
+macro(REGRESSION_TEST TEST_NAME UPPER_DIM INPUT)
     add_test(NAME create_primal_${TEST_NAME}
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --upper_dim ${UPPER_DIM} --upper_value ${UPPER_VALUE} ${INPUT}.complex primal_${TEST_NAME}.DIPHA_TEST
+         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --upper_dim ${UPPER_DIM} ${INPUT}.complex primal_${TEST_NAME}.DIPHA_TEST
          WORKING_DIRECTORY ${TEST_DATA_DIR}
         )
 	add_test(NAME compare_primal_${TEST_NAME}
@@ -101,7 +89,7 @@ macro(REGRESSION_TEST TEST_NAME UPPER_DIM UPPER_VALUE INPUT)
 	set_tests_properties(compare_primal_${TEST_NAME} PROPERTIES DEPENDS create_primal_${TEST_NAME})
 
 	add_test(NAME create_dual_${TEST_NAME}
-         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual --upper_dim ${UPPER_DIM} --upper_value ${UPPER_VALUE} ${INPUT}.complex dual_${TEST_NAME}.DIPHA_TEST
+         COMMAND ${MPIEXEC} -n ${NUM_PROCESSES} $<TARGET_FILE:dipha> --dual --upper_dim ${UPPER_DIM} ${INPUT}.complex dual_${TEST_NAME}.DIPHA_TEST
          WORKING_DIRECTORY ${TEST_DATA_DIR}
         )
 	add_test(NAME compare_dual_${TEST_NAME}
@@ -112,26 +100,24 @@ macro(REGRESSION_TEST TEST_NAME UPPER_DIM UPPER_VALUE INPUT)
 endmacro(REGRESSION_TEST)
 
 SET(DEFAULT_UPPER_DIM 9223372036854775807)
-SET(DEFAULT_UPPER_VALUE 1.7976931348623157e+308)
 
-REGRESSION_TEST(smooth_def_def ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} smooth_16)     
-REGRESSION_TEST(smooth_def_5 ${DEFAULT_UPPER_DIM} 5 smooth_16)  
-REGRESSION_TEST(smooth_2_def 2 ${DEFAULT_UPPER_VALUE} smooth_16)  
+REGRESSION_TEST(smooth_def_def ${DEFAULT_UPPER_DIM} smooth_16)     
+REGRESSION_TEST(smooth_2_def 2 smooth_16)  
 
-REGRESSION_TEST(noise_3_16_def_def ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} noise_3_16)  
-REGRESSION_TEST(noise_4_8_def_def ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} noise_4_8)  
+REGRESSION_TEST(noise_3_16_def_def ${DEFAULT_UPPER_DIM} noise_3_16)  
+REGRESSION_TEST(noise_4_8_def_def ${DEFAULT_UPPER_DIM} noise_4_8)  
 
-REGRESSION_TEST(ramp_3_16_def_def ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} ramp_3_16)  
-REGRESSION_TEST(ramp_4_8_def_def ${DEFAULT_UPPER_DIM} ${DEFAULT_UPPER_VALUE} ramp_4_8)  
+REGRESSION_TEST(ramp_3_16_def_def ${DEFAULT_UPPER_DIM} ramp_3_16)  
+REGRESSION_TEST(ramp_4_8_def_def ${DEFAULT_UPPER_DIM} ramp_4_8)  
 
-REGRESSION_TEST(sphere_3_def 3 ${DEFAULT_UPPER_VALUE} sphere_3_32)
-REGRESSION_TEST(sphere_2_def 2 ${DEFAULT_UPPER_VALUE} sphere_3_32)
-REGRESSION_TEST(sphere_1_def 1 ${DEFAULT_UPPER_VALUE} sphere_3_32)
+REGRESSION_TEST(sphere_3_def 3 sphere_3_32)
+REGRESSION_TEST(sphere_2_def 2 sphere_3_32)
+REGRESSION_TEST(sphere_1_def 1 sphere_3_32)
 
-REGRESSION_TEST(sphere_3_2   3 ${DEFAULT_UPPER_VALUE} sphere_3_32_2)  
-REGRESSION_TEST(sphere_3_0.8 3 ${DEFAULT_UPPER_VALUE} sphere_3_32_0.8)
-REGRESSION_TEST(sphere_2_0.5 2 ${DEFAULT_UPPER_VALUE} sphere_3_32_0.5)
-REGRESSION_TEST(sphere_1_0.3 2 ${DEFAULT_UPPER_VALUE} sphere_3_32_0.3)
+REGRESSION_TEST(sphere_3_2   3 sphere_3_32_2)  
+REGRESSION_TEST(sphere_3_0.8 3 sphere_3_32_0.8)
+REGRESSION_TEST(sphere_2_0.5 2 sphere_3_32_0.5)
+REGRESSION_TEST(sphere_1_0.3 2 sphere_3_32_0.3)
 
 
 add_test(NAME create_dualize

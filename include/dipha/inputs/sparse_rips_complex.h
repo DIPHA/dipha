@@ -869,7 +869,7 @@ namespace dipha {
 
             // index -> set of points (in decreasing index order)
             template<typename OutputIterator>
-            OutputIterator conversion( int64_t idx, OutputIterator out ) const
+            void conversion( int64_t idx, OutputIterator out ) const
             {
                 int64_t k = _get_local_dim_full_index( idx );
                 idx -= _m_breakpoints[ k ];
