@@ -14,7 +14,7 @@ Ulrich Bauer, Michael Kerber
 
 This C++ software package computes persistent homology in a distributed setting following the algorithm proposed in [[A]](http://dx.doi.org/10.1137/1.9781611973198.4). For an introduction to persistent homology, see the textbook [[B]](http://www.ams.org/bookstore-getitem/item=mbk-69). 
 
-There are three types of input that are currently supported by `DIPHA`:
+There are three types of input that are currently supported by DIPHA:	
 
   1. d-dimensional gray-scale image data. The data is internally interpreted as a weighted cubical cell complex and its lower-star filtration is used for the subsequent persistence computation. This approach is described in detail in [[C]](http://link.springer.com/chapter/10.1007%2F978-3-642-23175-9_7).
   
@@ -22,31 +22,31 @@ There are three types of input that are currently supported by `DIPHA`:
 
   3. weighted regular cell complexes in (co-)boundary matrix form. This (fallback) input type allows the computation of persistent homology of e.g. alpha shapes, rips complexes, or witness complexes. The user is responsible for making sure that the weights of the cells induce a filtration of the complex.
   
-The output produced by `DIPHA` consists of the persistence diagram. Each point in the diagram is defined by the dimension of the homological feature that it represents and the corresponding birth- and death value. 
+The output produced by DIPHA consists of the persistence diagram. Each point in the diagram is defined by the dimension of the homological feature that it represents and the corresponding birth- and death value. 
 
-Input and output is realized using binary files whose format is specified below. `DIPHA` includes `MATLAB` functions to create the input files and visualize the output.
+Input and output is realized using binary files whose format is specified below. DIPHA includes MATLAB functions to create the input files and visualize the output.
 
-To achieve good performance `DIPHA` supports dualized computation as described in [[D]](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.225.5421), makes use of the optimization introduced in [[E]](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.224.6560) and employs an efficient data structure developed in the [PHAT project](http://phat.googlecode.com/) as described in [[F]](https://people.mpi-inf.mpg.de/~mkerber/bkrw-pphat.pdf).
+To achieve good performance DIPHA supports dualized computation as described in [[D]](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.225.5421), makes use of the optimization introduced in [[E]](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.224.6560) and employs an efficient data structure developed in the [PHAT project](http://phat.googlecode.com/) as described in [[F]](https://people.mpi-inf.mpg.de/~mkerber/bkrw-pphat.pdf).
 
 ## Setup:
 
 Prerequisites:
 
-  * A modern C++ compiler like [GCC 4.7](http://gcc.gnu.org/), [Clang 3.3](http://clang.llvm.org/), or [Visual Studio 2012](http://www.microsoft.com/en-us/download/details.aspx?id=34673). `DIPHA` uses some C++11 features, so older compilers are not supported. If you are using Visual Studio 2013 you need to additionally install Visual Studio 2012.
+  * A modern C++ compiler like [GCC 4.7](http://gcc.gnu.org/), [Clang 3.3](http://clang.llvm.org/), or [Visual Studio 2012](http://www.microsoft.com/en-us/download/details.aspx?id=34673). DIPHA uses some C++11 features, so older compilers are not supported. If you are using Visual Studio 2013 you need to additionally install Visual Studio 2012.
 
   * An `MPI` implementation like [Open MPI](http://www.open-mpi.org/)  or [MPICH2](http://www.mpich.org/). Other MPI implementations may also work, but are untested.
 
   * the cross-platform, open-source build system [CMake](http://www.cmake.org/), version 2.8 or later
 
-To compile `DIPHA`:
+To compile DIPHA:
 
   1. use CMake to create a build environment. If you are using Visual Studio 2013 you need to run CMake twice.
   
-  2. compile `DIPHA` using your favorite C++ compiler.
+  2. compile DIPHA using your favorite C++ compiler.
 
 ## Usage:
 
-To run `DIPHA` using a single process:
+To run DIPHA using a single process:
 ```
 dipha [options] input_filename output_filename
 ```
@@ -60,16 +60,16 @@ where the available `options` are:
   
   * `--upper_value X`: computes the persistence diagram only up to value `X`. This option is crucial when computing persistence of large distance matrices.
 
-To run `DIPHA` with N processes using `MPI`:
+To run DIPHA with N processes using `MPI`:
 ```
 mpiexec -n N dipha [options] input_filename output_filename
 ```
 
 ## File Formats:
 
-All file formats in `DIPHA` are in little-endian binary format. Integral values are stored using the binary representation of 64bit signed integers, while floating point values are stored in IEEE 754 double-precision binary floating-point format.
+All file formats in DIPHA are in little-endian binary format. Integral values are stored using the binary representation of 64bit signed integers, while floating point values are stored in IEEE 754 double-precision binary floating-point format.
 
-The first symbol in every `DIPHA` file is the magic number 8067171840. The second symbol is the integer encoding the actual file type. See `dipha/file_types.h` for a list of file types and their associated integral identifier. The rest of the symbols in the file depend on the file type:
+The first symbol in every DIPHA file is the magic number 8067171840. The second symbol is the integer encoding the actual file type. See `dipha/file_types.h` for a list of file types and their associated integral identifier. The rest of the symbols in the file depend on the file type:
 
   * d-dimensional gray-scale image data (`IMAGE_DATA`):
     1. number of data values `n` 
@@ -78,7 +78,7 @@ The first symbol in every `DIPHA` file is the magic number 8067171840. The secon
     4. floating point data values in x-fastest order: `v(1) ... v(n)` 
 	
     Example: a gray-scale FullHD frame would have `n = 1920 * 1080`, `d = 2`, `g(1) = 1920`, `g(2) = 1080`, and `v(1) ... v(n)`, would be the gray-scale values in scan-line order.
-    A simple `MATLAB` file writer is included in `DIPHA` (`matlab/save_image_data.m`).
+    A simple MATLAB file writer is included in DIPHA (`matlab/save_image_data.m`).
 	
   * weighted regular cell complexes in (co-)boundary matrix form (`WEIGHTED_BOUNDARY_MATRIX`):
     1. 0 if the file contains the boundaries of the cells, 1 if the file contains the coboundaries 
@@ -96,7 +96,7 @@ The first symbol in every `DIPHA` file is the magic number 8067171840. The secon
     1. number of input points `n` 
     2. floating point values for the distances in row order: `d(1,1) ... d(1,n) d(2,1) ... d(n,n)`
 	
-    A simple `MATLAB` file writer is included in `DIPHA` (`matlab/save_distance_matrix.m`).
+    A simple MATLAB file writer is included in DIPHA (`matlab/save_distance_matrix.m`).
 
   * sparse distance matrix data (`SPARSE_DISTANCE_MATRIX`)
     1. number of input points `n`
@@ -109,16 +109,16 @@ The first symbol in every `DIPHA` file is the magic number 8067171840. The secon
     2. dimension, birth, death triples: `dim(1) birth(1) death(1) ... dim(p) birth(p) death(p)`. Dimensions are stored as integers, while birth and death values are stored as floating point numbers.
 	
     If `dim(k)` is negative, then the corresponding triple represents an essential class of dimension `-dim(k) - 1`.
-    A simple `MATLAB` function to plot persistence diagrams is included in `DIPHA` (`matlab/plot_persistence_diagram.m`).
+    A simple MATLAB function to plot persistence diagrams is included in DIPHA (`matlab/plot_persistence_diagram.m`).
     
 ## Examples:
-To save space, `DIPHA` does not come with any example data files. However, there are several `MATLAB` functions (`matlab/create_*.m`) that may be used to create synthetic examples for benchmark purposes. For example, to create a 3-dimensional image data set with 32^3 voxels whose values are given by random numbers you can execute the command
+To save space, DIPHA does not come with any example data files. However, there are several MATLAB functions (`matlab/create_*.m`) that may be used to create synthetic examples for benchmark purposes. For example, to create a 3-dimensional image data set with 32^3 voxels whose values are given by random numbers you can execute the command
 ```
 matlab -nojvm -nodisplay -nosplash -r "addpath('../matlab'); create_noise_image_data(3, 32); exit"
 ```
 in the `dipha/examples` folder.
 
-To visualize persistence diagrams with a large number of points it is recommended to use the provided `MATLAB` function that draws a density estimate of the diagram (`matlab/plot_persistence_diagram_density.m`).
+To visualize persistence diagrams with a large number of points it is recommended to use the provided MATLAB function that draws a density estimate of the diagram (`matlab/plot_persistence_diagram_density.m`).
  
 ## References:
 *A*) U.Bauer, M.Kerber, J.Reininghaus: [Distributed computation of persistent homology](http://dx.doi.org/10.1137/1.9781611973198.4). Proceedings of the Sixteenth Workshop on Algorithm Engineering and Experiments (ALENEX), 2014.
