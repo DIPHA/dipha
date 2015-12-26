@@ -12,7 +12,7 @@ Ulrich Bauer, Michael Kerber
 
 ## Description:
 
-This C++ software package computes persistent homology in a distributed setting following the algorithm proposed in [[A]](http://dx.doi.org/10.1137/1.9781611973198.4). For an introduction to persistent homology, see the textbook [[B]](http://www.ams.org/bookstore-getitem/item=mbk-69). 
+This C++ software package computes persistent homology following the algorithm proposed in [[A]](http://dx.doi.org/10.1137/1.9781611973198.4). Besides supporting parallel execution on a single machine, DIPHA may also be run on a cluster of several machines using MPI. For an introduction to persistent homology, see the textbook [[B]](http://www.ams.org/bookstore-getitem/item=mbk-69). 
 
 There are three types of input that are currently supported by DIPHA:	
 
