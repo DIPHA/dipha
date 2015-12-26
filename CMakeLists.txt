@@ -101,18 +101,18 @@ endmacro(REGRESSION_TEST)
 
 SET(DEFAULT_UPPER_DIM 9223372036854775807)
 
-REGRESSION_TEST(smooth_def_def ${DEFAULT_UPPER_DIM} smooth_16)     
-REGRESSION_TEST(smooth_2_def 2 smooth_16)  
+REGRESSION_TEST(smooth_def ${DEFAULT_UPPER_DIM} smooth_16)     
+REGRESSION_TEST(smooth_2 2 smooth_16)  
 
-REGRESSION_TEST(noise_3_16_def_def ${DEFAULT_UPPER_DIM} noise_3_16)  
-REGRESSION_TEST(noise_4_8_def_def ${DEFAULT_UPPER_DIM} noise_4_8)  
+REGRESSION_TEST(noise_3_16_def ${DEFAULT_UPPER_DIM} noise_3_16)  
+REGRESSION_TEST(noise_4_8_def ${DEFAULT_UPPER_DIM} noise_4_8)  
 
-REGRESSION_TEST(ramp_3_16_def_def ${DEFAULT_UPPER_DIM} ramp_3_16)  
-REGRESSION_TEST(ramp_4_8_def_def ${DEFAULT_UPPER_DIM} ramp_4_8)  
+REGRESSION_TEST(ramp_3_16_def ${DEFAULT_UPPER_DIM} ramp_3_16)  
+REGRESSION_TEST(ramp_4_8_def ${DEFAULT_UPPER_DIM} ramp_4_8)  
 
-REGRESSION_TEST(sphere_3_def 3 sphere_3_32)
-REGRESSION_TEST(sphere_2_def 2 sphere_3_32)
-REGRESSION_TEST(sphere_1_def 1 sphere_3_32)
+REGRESSION_TEST(sphere_3 3 sphere_3_32)
+REGRESSION_TEST(sphere_2 2 sphere_3_32)
+REGRESSION_TEST(sphere_1 1 sphere_3_32)
 
 REGRESSION_TEST(sphere_3_2   3 sphere_3_32_2)  
 REGRESSION_TEST(sphere_3_0.8 3 sphere_3_32_0.8)
