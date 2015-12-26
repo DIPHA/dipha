@@ -1,4 +1,4 @@
-# DIPHA (A Distributed Persistent Homology Algorithm), v2.1.0
+# DIPHA (A Distributed Persistent Homology Algorithm)
 Copyright 2014 IST Austria
 ## Project Founder: 
 
