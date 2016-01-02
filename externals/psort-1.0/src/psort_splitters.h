@@ -147,7 +147,7 @@ namespace p_sort {
 
                     _Distance mid = accumulate( subdist[ k ].begin(),
                                                 subdist[ k ].end(),
-                                                0 ) / 2;
+                                                (_Distance)0 ) / 2;
                     _Distance query_ind = -1;
                     for( int i = 0; i < n_real; ++i ) {
                         if( subdist[ k ][ ms_perm[ i ] / n_act ] == 0 ) continue;
