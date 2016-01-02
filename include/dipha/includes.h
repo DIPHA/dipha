@@ -56,7 +56,6 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 #include <dipha/data_structures/write_once_array_of_arrays.h>
 #include <dipha/data_structures/write_once_column_array.h>
 
-
 #include <dipha/inputs/abstract_weighted_cell_complex.h>
 #include <dipha/inputs/weighted_cubical_complex.h>
 #include <dipha/inputs/weighted_explicit_complex.h>

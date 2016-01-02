@@ -21,41 +21,43 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <dipha/includes.h>
 
-namespace dipha {
-    namespace data_structures {
-        template< typename T >
-        class write_once_array_of_arrays {
+namespace dipha
+{
+  namespace data_structures
+  {
+    template< typename T >
+    class write_once_array_of_arrays
+    {
+      // we make the internal data representation public so that we can easily transmit the object using MPI
+    public:
+      std::vector< T > data;
 
-            // we make the internal data representation public so that we can easily transmit the object using MPI
-        public:
-            std::vector< T > data;
+    public:
+      void init(int64_t num_arrays)
+      {
+        // data layout: num_arrays % arrays_begin % arrays_end % flat_array_entries
+        data.resize(2 * num_arrays + 1, -1);
+        data.front() = num_arrays;
+      }
 
-        public:
-            void init( int64_t num_arrays )
-            {
-                // data layout: num_arrays % arrays_begin % arrays_end % flat_array_entries
-                data.resize( 2 * num_arrays + 1, -1 );
-                data.front() = num_arrays;
-            }
+      void clear() { data.clear(); }
 
-            void clear() { data.clear(); }
+      int64_t size() const { return data.front(); }
 
-            int64_t size() const { return data.front(); }
+      typename std::vector< T >::const_iterator begin(int64_t idx) const { return data.cbegin() + get_array_begin(idx); }
+      typename std::vector< T >::const_iterator end(int64_t idx) const { return data.cbegin() + get_array_end(idx); }
 
-            typename std::vector< T >::const_iterator begin( int64_t idx ) const { return data.cbegin() + get_array_begin( idx ); }
-            typename std::vector< T >::const_iterator end( int64_t idx ) const { return data.cbegin() + get_array_end( idx ); }
+      template< class InputIterator >
+      void set(int64_t idx, InputIterator first, InputIterator last)
+      {
+        data[idx + 1] = data.size();
+        data.insert(data.end(), first, last);
+        data[size() + idx + 1] = data.size();
+      }
 
-            template< class InputIterator >
-            void set( int64_t idx, InputIterator first, InputIterator last )
-            {
-                data[ idx + 1 ] = data.size();
-                data.insert( data.end(), first, last );
-                data[ size() + idx + 1 ] = data.size();
-            }
-
-        protected:
-            int64_t get_array_begin( int64_t idx ) const { return data[ idx + 1 ]; }
-            int64_t get_array_end( int64_t idx ) const { return data[ size() + idx + 1 ]; }
-        };
-    }
+    protected:
+      int64_t get_array_begin(int64_t idx) const { return data[idx + 1]; }
+      int64_t get_array_end(int64_t idx) const { return data[size() + idx + 1]; }
+    };
+  }
 }

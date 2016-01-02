@@ -21,88 +21,95 @@ along with DIPHA.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <dipha/includes.h>
 
-namespace dipha {
-    namespace data_structures {
-        class heap_column : public std::vector< int64_t > {
+namespace dipha
+{
+  namespace data_structures
+  {
+    class heap_column : public std::vector< int64_t >
+    {
 
-        private:
-            std::vector< int64_t > temp_col;
-            int64_t pushes_since_last_prune;
+    private:
+      std::vector< int64_t > temp_col;
+      int64_t pushes_since_last_prune;
 
-        public:
-            heap_column( ) : pushes_since_last_prune( 0 ) {};
+    public:
+      heap_column() : pushes_since_last_prune(0) {};
 
-            template< typename Iterator >
-            void add_column( Iterator first, Iterator last )
-            {
-                for( Iterator it = first; it != last; it++ )
-                    push( *it );
-                pushes_since_last_prune += std::distance( first, last );
-                if( 2 * pushes_since_last_prune > (int64_t)size() + 1024 * 1024 )
-                    prune();
-            }
+      template< typename Iterator >
+      void add_column(Iterator first, Iterator last)
+      {
+        for (Iterator it = first; it != last; it++)
+          push(*it);
+        pushes_since_last_prune += std::distance(first, last);
+        if (2 * pushes_since_last_prune > (int64_t)size() + 1024 * 1024)
+          prune();
+      }
 
-            void prune()
-            {
-                if( pushes_since_last_prune > 0 ) {
-                    temp_col.clear( );
-                    int64_t max_index = pop_max_index( );
-                    while( max_index != -1 ) {
-                        temp_col.push_back( max_index );
-                        max_index = pop_max_index( );
-                    }
-                    for( const auto& index : temp_col )
-                        push( index );
-                    pushes_since_last_prune = 0;
-                }
-            }
+      void prune()
+      {
+        if (pushes_since_last_prune > 0)
+        {
+          temp_col.clear();
+          int64_t max_index = pop_max_index();
+          while (max_index != -1)
+          {
+            temp_col.push_back(max_index);
+            max_index = pop_max_index();
+          }
+          for (const auto& index : temp_col)
+            push(index);
+          pushes_since_last_prune = 0;
+        }
+      }
 
-            void clear( )
-            {
-                pushes_since_last_prune = 0;
-                static_cast< std::vector< int64_t >* >( this )->clear();
-            }
+      void clear()
+      {
+        pushes_since_last_prune = 0;
+        static_cast<std::vector< int64_t >*>(this)->clear();
+      }
 
 
-            int64_t get_max_index()
-            {
-                int64_t max_index = pop_max_index( );
-                if( max_index != -1 )
-                    push( max_index );
-                return max_index;
-            }
+      int64_t get_max_index()
+      {
+        int64_t max_index = pop_max_index();
+        if (max_index != -1)
+          push(max_index);
+        return max_index;
+      }
 
-        private:
-            void push( int64_t index )
-            {
-                push_back( index );
-                std::push_heap( begin(), end() );
-            }
+    private:
+      void push(int64_t index)
+      {
+        push_back(index);
+        std::push_heap(begin(), end());
+      }
 
-            int64_t pop()
-            {
-                int64_t top = front();
-                std::pop_heap( begin(), end() );
-                pop_back();
-                return top;
-            }
-            
-            int64_t pop_max_index() 
-            {
-                if( empty() )
-                    return -1;
-                else {
-                    int64_t max_element = pop( );
-                    while( !empty() && front() == max_element ) {
-                        pop();
-                        if( empty() )
-                            return -1;
-                        else
-                            max_element = pop();
-                    }
-                    return max_element;
-                }
-            }
-        };
-    }
+      int64_t pop()
+      {
+        int64_t top = front();
+        std::pop_heap(begin(), end());
+        pop_back();
+        return top;
+      }
+
+      int64_t pop_max_index()
+      {
+        if (empty())
+          return -1;
+        else
+        {
+          int64_t max_element = pop();
+          while (!empty() && front() == max_element)
+          {
+            pop();
+            if (empty())
+              return -1;
+            else
+              max_element = pop();
+          }
+          return max_element;
+        }
+      }
+    };
+  }
 }
