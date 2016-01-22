@@ -37,7 +37,8 @@ function plot_persistence_diagram( filename, persistence_threshold )
     ordinaries = ~essentials;
     
     %% draw parameters
-    cur_colormap = lines( max( dims ) + 1 );
+    max_dims = max(floor(abs(dims+0.5)))
+    cur_colormap = lines( max_dims + 1 );
     colormap( cur_colormap );
     marker_size = 50;
     
@@ -73,8 +74,8 @@ function plot_persistence_diagram( filename, persistence_threshold )
     ylabel('Death');
 
     %% draw colobar
-    caxis([0 max(dims)])
-    ylabel(colorbar('YTick',0:1:max(dims)), 'Dimension');
+    caxis([0 max_dims])
+    ylabel(colorbar('YTick',0:1:max_dims), 'Dimension');
     
     %% draw title
     set( title(['Data: ' filename]), 'Interpreter', 'none' );
