@@ -1,4 +1,4 @@
-# DIPHA (A Distributed Persistent Homology Algorithm), v2.1.0
+# DIPHA (A Distributed Persistent Homology Algorithm)
 Copyright 2014 IST Austria
 ## Project Founder: 
 
@@ -12,15 +12,15 @@ Ulrich Bauer, Michael Kerber
 
 ## Description:
 
-This C++ software package computes persistent homology in a distributed setting following the algorithm proposed in [[A]](http://dx.doi.org/10.1137/1.9781611973198.4). For an introduction to persistent homology, see the textbook [[B]](http://www.ams.org/bookstore-getitem/item=mbk-69). 
+This C++ software package computes persistent homology following the algorithm proposed in [[A]](http://dx.doi.org/10.1137/1.9781611973198.4). Besides supporting parallel execution on a single machine, DIPHA may also be run on a cluster of several machines using MPI. For an introduction to persistent homology, see the textbook [[B]](http://www.ams.org/bookstore-getitem/item=mbk-69). 
 
 There are three types of input that are currently supported by DIPHA:	
 
   1. d-dimensional gray-scale image data. The data is internally interpreted as a weighted cubical cell complex and its lower-star filtration is used for the subsequent persistence computation. This approach is described in detail in [[C]](http://link.springer.com/chapter/10.1007%2F978-3-642-23175-9_7).
   
-  2. distance matrix data. The data is internally interpreted as a Rips complex of as many points as there are columns in the given matrix. The distance between any two points is then defined by the input data.
+  2. distance matrix data. The data is internally interpreted as a [Vietoris–Rips complex](https://en.wikipedia.org/wiki/Vietoris%E2%80%93Rips_complex) of as many points as there are columns in the given matrix. The distance between any two points is then defined by the input data. To allow for large data analysis, DIPHA supports sparse distance matrices which only encode the finite distances to save space.
 
-  3. weighted regular cell complexes in (co-)boundary matrix form. This (fallback) input type allows the computation of persistent homology of e.g. alpha shapes, rips complexes, or witness complexes. The user is responsible for making sure that the weights of the cells induce a filtration of the complex.
+  3. weighted regular cell complexes in (co-)boundary matrix form. This (fallback) input type allows the computation of persistent homology of e.g. Alpha complexes, Vietoris–Rips complex approximations, or Witness complexes. 
   
 The output produced by DIPHA consists of the persistence diagram. Each point in the diagram is defined by the dimension of the homological feature that it represents and the corresponding birth- and death value. 
 
@@ -32,15 +32,15 @@ To achieve good performance DIPHA supports dualized computation as described in 
 
 Prerequisites:
 
-  * A modern C++ compiler like [GCC 4.7](http://gcc.gnu.org/), [Clang 3.3](http://clang.llvm.org/), or [Visual Studio 2012](http://www.microsoft.com/en-us/download/details.aspx?id=34673). DIPHA uses some C++11 features, so older compilers are not supported. If you are using Visual Studio 2013 you need to additionally install Visual Studio 2012.
+  * A modern C++ compiler like [GCC 4.7](http://gcc.gnu.org/), [Clang 3.3](http://clang.llvm.org/), or [Visual Studio 2015](https://www.visualstudio.com/vs-2015-product-editions). DIPHA uses C++11, so older C++ compilers are not supported. In particular, Visual Studio 2013 is not supported.
 
-  * An `MPI` implementation like [Open MPI](http://www.open-mpi.org/)  or [MPICH2](http://www.mpich.org/). Other MPI implementations may also work, but are untested.
+  * An `MPI` implementation like [Open MPI](http://www.open-mpi.org/), [MPICH2](http://www.mpich.org/), or [MS-MPI](https://msdn.microsoft.com/en-us/library/vs/alm/bb524831(v=vs.85).aspx). Other MPI implementations may also work, but are untested.
 
   * the cross-platform, open-source build system [CMake](http://www.cmake.org/), version 2.8 or later
 
 To compile DIPHA:
 
-  1. use CMake to create a build environment. If you are using Visual Studio 2013 you need to run CMake twice.
+  1. use CMake to create a build environment.
   
   2. compile DIPHA using your favorite C++ compiler.
 
@@ -57,8 +57,6 @@ where the available `options` are:
   * `--dual`: runs the dualized version of the algorithm, which dramatically improves the running time in some cases.
   
   * `--upper_dim D`: restricts the computation to the first `D` dimensions of the input complex. This option is mandatory when dealing with distance matrix data.
-  
-  * `--upper_value X`: computes the persistence diagram only up to value `X`. This option is crucial when computing persistence of large distance matrices.
 
 To run DIPHA with N processes using `MPI`:
 ```
@@ -103,6 +101,8 @@ The first symbol in every DIPHA file is the magic number 8067171840. The second 
     2. number of connections of each point: `c(1) ... c(n)`
     3. indices of connected vertices: `i(1,1) ... i(1,c(1)) i(2,1) ... i(n,c(n))`
     4. distance values of connected vertices `d(1,1) ... d(1,c(1) d(2,1) ... d(n,c(n))`
+    
+ To create a sparse distance matrix DIPHA provides a `full_to_sparse_distance_matrix` utility.
 
   * persistence diagram (`PERSISTENCE_DIAGRAM`):
     1. number of points in the diagram `p`
